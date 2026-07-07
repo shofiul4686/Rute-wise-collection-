@@ -1,0 +1,2859 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <base target="_top" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IBN SINA Collection Report</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Firebase (Firestore + Realtime Database) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f2f5;
+        color: #000;
+      }
+
+      .container {
+        width: 95%;
+        margin: 20px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .sticky-header-wrapper {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background-color: #ffffff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #8ec5ff;
+        color: black;
+        padding: 10px 15px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .header-left-total {
+        flex-shrink: 0;
+      }
+
+      .header-right-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .mini-totals-group {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .mini-total {
+        font-size: 11px;
+        min-width: 108px;
+      }
+      .mini-total .info-label {
+        font-size: 9.5px;
+      }
+      .mini-total .info-value {
+        font-size: 10px;
+      }
+      .mini-total:hover {
+        transform: scale(1.15);
+        z-index: 15;
+      }
+
+      @media (max-width: 760px) {
+        .header {
+          justify-content: center;
+        }
+        .header-left-total,
+        .header-right-group {
+          width: 100%;
+          align-items: center;
+        }
+        .mini-totals-group {
+          justify-content: center;
+        }
+      }
+
+      .header-title {
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .header-title h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .header-title h5 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+        color: green;
+      }
+      .header-title p {
+        margin: 5px 0 0;
+        font-size: 14px;
+      }
+
+      .header-right {
+        font-size: 24px;
+        font-weight: bold;
+        background-color: #ff0000;
+        padding: 3px 8px;
+        border-radius: 5px;
+      }
+
+      .top-nav {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 2px 10px;
+        background-color: #e9ecef;
+        border-bottom: 1px solid #ced4da;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 5px;
+      }
+
+      .controls label {
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      #search-by {
+        padding: 8px 10px;
+        font-size: 16px;
+        height: 40px;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        min-width: 130px;
+      }
+
+      #route-category-filter {
+        padding: 8px 30px 8px 10px;
+        font-size: 16px;
+        height: 40px;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        min-width: 160px;
+        box-sizing: border-box;
+      }
+
+      #text-filter {
+        padding: 8px 10px;
+        font-size: 16px;
+        height: 40px;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        min-width: 200px;
+        box-sizing: border-box;
+      }
+
+      .fillable-line {
+        border: none;
+        background: none;
+        outline: none;
+        padding: 6px 3px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+      }
+
+      /* ---- একটাই টুলবার লাইনে: Date, Search By, Print/Preview/Save, Prev/Page/Next ---- */
+      .toolbar-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px 20px;
+        padding: 8px 15px;
+        background-color: #e9ecef;
+        border-bottom: 1px solid #ced4da;
+        flex-wrap: wrap;
+      }
+      .toolbar-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        flex-shrink: 0;
+      }
+      .toolbar-item label {
+        font-weight: bold;
+        font-size: 15px;
+        color: #0b4f8c;
+        white-space: nowrap;
+      }
+
+      /* ---- কাস্টম ডেট পিকার (রিপোর্ট পেজের জন্য, নীল থিমে) ---- */
+      .rep-date-picker {
+        position: relative;
+      }
+      .rep-date-picker-trigger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border: 1.5px solid #ced4da;
+        border-radius: 6px;
+        background: #fbfcfe;
+        font-family: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        color: #0b4f8c;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+        white-space: nowrap;
+      }
+      .rep-date-picker-trigger:hover {
+        border-color: #8fb3d6;
+      }
+      .rep-date-picker-trigger.open {
+        outline: none;
+        border-color: #0b4f8c;
+        box-shadow: 0 0 0 3px rgba(11, 79, 140, 0.15);
+      }
+      .rep-date-picker-trigger svg {
+        color: #0b4f8c;
+        flex-shrink: 0;
+      }
+      .rep-date-picker-panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 60;
+        width: 250px;
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 12px;
+        box-shadow: 0 10px 28px -8px rgba(11, 79, 140, 0.35);
+        padding: 14px;
+        display: none;
+      }
+      .rep-date-picker-panel.open {
+        display: block;
+      }
+      .rep-dp-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .rep-dp-header span {
+        font-weight: 700;
+        font-size: 13.5px;
+        color: #0b4f8c;
+      }
+      .rep-dp-nav {
+        background: none;
+        border: none;
+        width: auto;
+        margin: 0;
+        padding: 3px 9px;
+        font-size: 16px;
+        color: #0b4f8c;
+        cursor: pointer;
+        border-radius: 6px;
+        line-height: 1.4;
+      }
+      .rep-dp-nav:hover {
+        background: #e6f0fa;
+      }
+      .rep-dp-weekdays,
+      .rep-dp-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+      .rep-dp-weekdays span {
+        text-align: center;
+        font-size: 11px;
+        color: #66766c;
+        font-weight: 600;
+        padding-bottom: 6px;
+      }
+      .rep-dp-grid button {
+        width: 100%;
+        margin: 0;
+        padding: 7px 0;
+        font-size: 12.5px;
+        border-radius: 7px;
+        background: transparent;
+        color: #1c2b24;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+      }
+      .rep-dp-grid button:hover {
+        background: #e6f0fa;
+      }
+      .rep-dp-grid button.rep-dp-muted {
+        color: #c3cbc5;
+      }
+      .rep-dp-grid button.rep-dp-today {
+        border: 1.5px solid #c9793a;
+      }
+      .rep-dp-grid button.rep-dp-selected {
+        background: #0b4f8c;
+        color: #fff;
+        font-weight: 700;
+      }
+
+      /* ---- কাস্টম, মার্জিত ডেট পিকার (flatpickr থিম — অ্যাপের নীল প্যালেটের সাথে মিলিয়ে) ---- */
+      .date-picker-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .date-picker-field svg {
+        position: absolute;
+        left: 11px;
+        pointer-events: none;
+        color: #0b4f8c;
+      }
+      .ds-date-alt {
+        padding: 8px 12px 8px 34px;
+        font-size: 15px;
+        font-weight: 600;
+        height: 40px;
+        border-radius: 6px;
+        border: 1.5px solid #ced4da;
+        background: #fbfcfe;
+        color: #0b4f8c;
+        cursor: pointer;
+        box-sizing: border-box;
+        min-width: 150px;
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .ds-date-alt:hover {
+        border-color: #8fb3d6;
+      }
+      .ds-date-alt:focus,
+      .ds-date-alt.flatpickr-focused {
+        outline: none;
+        border-color: #0b4f8c;
+        box-shadow: 0 0 0 3px rgba(11, 79, 140, 0.15);
+      }
+      .flatpickr-calendar {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 28px -8px rgba(11, 79, 140, 0.35) !important;
+        border: 1px solid #ced4da !important;
+      }
+      .flatpickr-calendar.arrowTop:before,
+      .flatpickr-calendar.arrowTop:after {
+        display: none;
+      }
+      .flatpickr-months .flatpickr-month {
+        background: #0b4f8c !important;
+        border-radius: 12px 12px 0 0;
+        color: #fff !important;
+      }
+      .flatpickr-current-month .flatpickr-monthDropdown-months,
+      .flatpickr-current-month input.cur-year {
+        color: #fff !important;
+        font-weight: 700;
+      }
+      .flatpickr-current-month .flatpickr-monthDropdown-months option {
+        color: #000;
+      }
+      .flatpickr-months .flatpickr-prev-month,
+      .flatpickr-months .flatpickr-next-month {
+        color: #fff !important;
+        fill: #fff !important;
+      }
+      .flatpickr-months .flatpickr-prev-month:hover svg,
+      .flatpickr-months .flatpickr-next-month:hover svg {
+        fill: #ffd966 !important;
+      }
+      span.flatpickr-weekday {
+        background: #e6f0fa !important;
+        color: #0b4f8c !important;
+        font-weight: 700;
+      }
+      .flatpickr-day.selected,
+      .flatpickr-day.selected:hover {
+        background: #0b4f8c !important;
+        border-color: #0b4f8c !important;
+        color: #fff !important;
+      }
+      .flatpickr-day.today {
+        border-color: #c9793a !important;
+      }
+      .flatpickr-day:hover {
+        background: #e6f0fa !important;
+      }
+      .flatpickr-day.selected.today {
+        border-color: #0b4f8c !important;
+      }
+
+      /* ---- সার্চযোগ্য অটোকমপ্লিট ড্রপডাউন (DR নাম, Route/Category) — সাধারণ CSS ---- */
+      .dr-autocomplete-wrapper,
+      .autocomplete-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+
+      /* ---- ইনপুটে টাইপ করলে দেখা যাবে এমন Clear (X) বাটন ---- */
+      .autocomplete-clear {
+        display: none;
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        line-height: 18px;
+        text-align: center;
+        border-radius: 50%;
+        background-color: #ced4da;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 5;
+        user-select: none;
+      }
+
+      .autocomplete-clear:hover {
+        background-color: #dc3545;
+      }
+
+      #dr-suggestions,
+      .autocomplete-suggestions {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 100%;
+        width: max-content;
+        max-width: 480px;
+        background-color: #f0f2f5;
+        border: none;
+        border-radius: 8px;
+        max-height: 380px;
+        overflow-y: auto;
+        z-index: 100;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+        box-sizing: border-box;
+        padding: 8px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+
+      #dr-suggestions div,
+      .autocomplete-suggestions div {
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        text-align: left;
+        background-color: #ffffff;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        transition:
+          background-color 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.1s ease,
+          box-shadow 0.15s ease;
+      }
+
+      #dr-suggestions div:hover,
+      #dr-suggestions div.active,
+      .autocomplete-suggestions div:hover,
+      .autocomplete-suggestions div.active {
+        background-color: #0b4f8c;
+        border-color: #0b4f8c;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(11, 79, 140, 0.3);
+      }
+
+      .page-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .page-buttons button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+
+      .page-buttons button:hover {
+        opacity: 0.8;
+      }
+
+      .page-buttons .save {
+        background-color: #28a745;
+      }
+
+      .page-buttons .preview {
+        background-color: #ffc107;
+        color: #212529;
+      }
+
+      .page-buttons .print {
+        background-color: #17a2b8;
+      }
+
+      .marquee-container {
+        width: 80%;
+        padding: 0 10px;
+      }
+
+      .status-message {
+        color: green;
+        font-weight: bold;
+        font-size: 18px;
+        margin: 0;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      .top-panel {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 0 10px;
+        gap: 20px;
+      }
+
+      .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .pagination-controls button {
+        background-color: #0b4f8c;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        white-space: nowrap;
+      }
+
+      .pagination-controls button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .pagination-controls span {
+        white-space: nowrap;
+      }
+
+      .total-info-container {
+        display: flex;
+        justify-content: flex-start;
+        gap: 5px;
+        flex-wrap: wrap;
+        padding: 0;
+        margin: 0;
+      }
+
+      .total-info {
+        border: 1px solid #000;
+        padding: 2px 4px;
+        border-radius: 3px;
+        margin: 1px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        background-color: #fff;
+        font-size: 10px;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease,
+          background-color 0.2s ease;
+      }
+
+      .total-info:hover {
+        transform: scale(2.5);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        background-color: #e9f5ff;
+        z-index: 10;
+      }
+
+      .total-info:hover .info-label,
+      .total-info:hover .info-value {
+        font-weight: bold;
+      }
+
+      .info-label {
+        font-weight: bold;
+        padding: 1px 3px;
+        border-radius: 2px;
+        display: inline-block;
+        font-size: 9px;
+        text-align: center;
+        width: 100%;
+      }
+
+      .info-value {
+        line-height: 1;
+        font-size: 9px;
+      }
+
+      .total-info .info-value:first-of-type {
+        margin-top: 1px;
+      }
+
+      .total-info .info-value + .info-value {
+        margin-top: 1px;
+      }
+
+      .grand-total-label,
+      .grand-total-value {
+        color: #0b4f8c;
+      }
+
+      .pharma-label,
+      .pharma-value {
+        color: #28a745;
+      }
+
+      .sinavision-label,
+      .sinavision-value {
+        color: blue;
+      }
+
+      .inm-label,
+      .inm-value {
+        color: #dc3545;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border: 1px solid #dee2e6;
+        padding: 12px;
+      }
+
+      .comments-col,
+      .remarks-col {
+        white-space: normal;
+        word-break: break-all;
+        width: 10%;
+        cursor: col-resize;
+      }
+
+      thead th {
+        background-color: #566573;
+        color: #fff;
+        transition: background-color 0.3s ease;
+        cursor: default;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+        white-space: nowrap;
+        word-wrap: break-word;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      th.comments-col,
+      th.remarks-col {
+        white-space: normal;
+      }
+
+      td {
+        background-color: #f8f9fa;
+        text-align: center;
+      }
+
+      .text-left {
+        text-align: left;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      .logo-text {
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        margin-top: 5px;
+      }
+
+      td input[type="text"] {
+        box-sizing: border-box;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+      }
+
+      /* সকল মিডিয়ার জন্য সাধারণ স্টাইল */
+      .user-info-footer {
+        /* প্রাথমিক অবস্থায় (স্ক্রিনে) লুকানো থাকবে, শুধু প্রিন্টের সময় দেখা যাবে */
+        display: none;
+        justify-content: space-between;
+        margin-top: 15px;
+        padding: 5px 0;
+      }
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        /* দুটি আইটেম যাতে সমান জায়গা নেয় */
+        flex-basis: 48%;
+      }
+
+      .info-item span {
+        /* লেবেলের (USER ID:, USER NAME:) জন্য কিছু মার্জিন */
+        font-weight: bold;
+        margin-right: 10px;
+        white-space: nowrap;
+      }
+
+      .fillable-line {
+        /* ইনপুট ফিল্ডের জন্য */
+        flex-grow: 1; /* যতটুকু জায়গা আছে সব ব্যবহার করবে */
+        border: none;
+        border-bottom: 1px solid #000; /* নিচের লাইনটি তৈরি করবে */
+        padding: 0 5px;
+        font-size: 14px;
+        background-color: transparent; /* ব্যাকগ্রাউন্ড সাদা রাখবে যাতে প্রিন্ট করা সহজ হয় */
+      }
+
+      #dr-name-input {
+        min-width: 260px; /* ইনপুট ফিল্ডের সর্বনিম্ন প্রস্থ (350px থেকে কমানো হলো এক-লাইন লেআউটের জন্য) */
+        width: auto;
+        padding-right: 30px; /* Clear (X) বাটনের জন্য জায়গা */
+        box-sizing: border-box;
+      }
+
+      td .chemist-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.5;
+      }
+
+      td .chemist-info span {
+        white-space: normal;
+      }
+
+      td .chemist-address {
+        font-size: 10px;
+        color: #444;
+        line-height: 1.3;
+      }
+
+      td .mobile-input {
+        margin-top: 5px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .comment-inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .comment-inputs input {
+        margin: 0;
+      }
+
+      .collection-input {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+      }
+
+      .collection-amount-col,
+      .comments-col {
+        width: 1%;
+        white-space: normal;
+      }
+
+      .total-row td {
+        font-weight: bold;
+        background-color: #e9ecef;
+      }
+
+      .total-row .total-title {
+        text-align: right;
+      }
+
+      .user-info-section {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .user-info-section label {
+        font-weight: bold;
+      }
+
+      #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 1000;
+      }
+
+      .loader {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #0b4f8c;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #0b4f8c;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* স্বাভাবিক অবস্থায় নতুন হেডারটি লুকানো থাকবে এবং মার্জিন শূন্য করা হয়েছে */
+      .print-main-header {
+        display: none;
+        text-align: center;
+        margin-top: 0;
+        padding-top: 0;
+        padding-bottom: 15px;
+      }
+      .print-main-header h3,
+      .print-main-header h2,
+      .print-main-header p {
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      /* প্রিন্ট ছাড়া অন্য সময় লুকানো থাকবে */
+      .print-only {
+        display: none;
+      }
+
+      /* ---- ROUTE NAME / NAME OF DR / SCHEDULE DATE — স্ক্রিনে এক লাইনে (ফিক্সড) ---- */
+      .print-info-row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 25px;
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        overflow: visible; /* FIX: আগে overflow-x:auto ছিল, যেটা DR সাজেশন বক্সকে ঢেকে/কেটে ফেলছিল */
+      }
+
+      .print-info-row .print-header {
+        font-weight: bold;
+        color: #0b4f8c;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .print-info-row .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      .print-info-row .info-item span {
+        font-weight: bold;
+        white-space: nowrap;
+        margin-right: 0;
+      }
+
+      @media print {
+        .sticky-header-wrapper,
+        .header-totals-row,
+        .toolbar-row,
+        #loading-overlay {
+          display: none !important;
+        }
+        .user-info-footer {
+          display: flex; /* পাশাপাশি দেখানোর জন্য */
+          justify-content: space-between;
+          width: 100%;
+          margin-top: 60px; /* টেবিল থেকে দূরত্ব বাড়ানো হলো */
+          padding-top: 15px;
+          /* প্রিন্টের সময় কোনো ব্যাকগ্রাউন্ড বা শ্যাডো যেন না থাকে */
+          background: none;
+        }
+
+        .info-item {
+          flex-basis: 50%; /* দুটি আইটেম অর্ধেক অর্ধেক জায়গা নেবে */
+          padding: 0 10px;
+          box-sizing: border-box;
+        }
+
+        .fillable-line {
+          border: none;
+          border-bottom: 1px solid #000 !important; /* প্রিন্টের জন্য নিশ্চিত করা হলো */
+          -webkit-print-color-adjust: exact; /* যদি ব্রাউজারে ব্যাকগ্রাউন্ড কালার প্রিন্ট বন্ধ থাকে */
+        }
+        .print-main-header {
+          display: block !important;
+        }
+        .header-title1 {
+          text-align: center;
+          flex-grow: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+        #dr-name-select,
+        #schedule-date-input,
+        .fillable-line {
+          display: inline-block !important;
+          border: none !important;
+          margin-right: 15px;
+          font-weight: bold;
+          font-size: 14px;
+        }
+        .print-only {
+          display: inline !important;
+          color: #000 !important;
+          border-bottom: 1px dashed #000;
+          padding-bottom: 2px;
+        }
+
+        .print-info-row {
+          display: flex !important;
+          justify-content: flex-start;
+          gap: 80px;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .print-header {
+          font-weight: bold;
+          white-space: nowrap;
+        }
+
+        .info-item {
+          font-size: 14px;
+          white-space: nowrap;
+          font-weight: bold;
+        }
+
+        body {
+          background-color: #fff;
+          -webkit-print-color-adjust: exact;
+          color: #000;
+        }
+
+        .container {
+          box-shadow: none;
+          border: none;
+          width: 100%;
+          margin: 0;
+        }
+
+        .table-wrapper {
+          overflow: visible !important;
+          max-height: none !important;
+        }
+
+        table {
+          font-size: 10px;
+          width: 100% !important;
+          border-collapse: collapse;
+        }
+
+        th,
+        td {
+          border: 1px solid #000 !important;
+          padding: 5px !important;
+          color: #000;
+        }
+
+        /* শুধুমাত্র collection, comment এবং remarks input ফিল্ডগুলো হাইড করা হয়েছে */
+        .collection-input,
+        .comment-inputs input,
+        .remarks-col input {
+          display: none !important;
+        }
+
+        /* Chemist name এবং mobile number কলামের জন্য বিশেষ স্টাইল */
+        .chemist-info {
+          display: block !important;
+          max-width: 150px; /* কলামের জন্য একটি নির্দিষ্ট সর্বোচ্চ চওড়া */
+          overflow: hidden; /* অতিরিক্ত লেখা লুকিয়ে রাখা হবে */
+          text-overflow: ellipsis; /* লুকানো লেখার শেষে ... যোগ করা হবে */
+          white-space: nowrap; /* লেখা এক লাইনেই থাকবে */
+        }
+
+        /* প্রিন্টে Chemist Name, Address, Due Amount — Excel প্রিন্টের মতো গাঢ় কালো ও স্পষ্ট দেখানোর জন্য */
+        .chemist-info span,
+        .chemist-address,
+        .due-amount {
+          color: #000000 !important;
+          font-weight: 700 !important;
+          -webkit-text-stroke: 0.2px #000000;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        /* মোবাইল নম্বর ইনপুট প্রিন্ট করার জন্য */
+        .mobile-input {
+          border: none !important;
+          background: none !important;
+          padding: 0 !important;
+          font-size: 10px;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          display: inline-block !important;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        #dr-suggestions,
+        .autocomplete-suggestions,
+        .autocomplete-clear {
+          display: none !important;
+        }
+
+        .comments-col,
+        .remarks-col {
+          width: 20% !important;
+        }
+
+        thead {
+          display: table-header-group;
+          position: static;
+        }
+
+        thead th {
+          position: static;
+        }
+
+        tfoot {
+          display: table-row-group;
+        }
+
+        th[data-column="route"],
+        td:nth-child(16) {
+          display: none !important;
+        }
+
+        thead th {
+          background-color: #f0f0f0 !important;
+          color: #000 !important;
+          -webkit-print-color-adjust: exact;
+          border: 1px solid #000 !important;
+        }
+
+        @page {
+          size: landscape;
+          margin-top: 1cm; /* মেইন হেডার এর জন্য জায়গা */
+          margin-bottom: 1cm; /* পেজ নাম্বার এর জন্য জায়গা */
+          @bottom-center {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 10pt;
+            color: #555;
+          }
+        }
+
+        @page {
+          size: landscape;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading-overlay" style="display: none">
+      <div class="loader"></div>
+      <div class="loading-text">Data Loading Please Wait......</div>
+    </div>
+    <div id="message-box" style="display: none"></div>
+
+    <div class="print-main-header">
+      <div class="header-title1">
+        <img
+          src="https://images.seeklogo.com/logo-png/53/1/ibn-sina-medical-logo-png_seeklogo-536126.png"
+          alt="IBN SINA Logo"
+          style="height: 80px"
+        />
+        <div>
+          <h2>THE IBN SINA PHARMACEUTICAL INDUSTRY</h2>
+          <h3>DAILY ROUTE WISE COLLECTION FORM</h3>
+          <p>DINAJPUR DEPOT</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="sticky-header-wrapper">
+        <div class="header">
+          <div class="header-left-total">
+            <div class="total-info mini-total">
+              <label class="info-label grand-total-label">GRAND TOTAL</label>
+              <span
+                id="grand-total-chemist"
+                class="info-value grand-total-value"
+                >Total Chemist = 0</span
+              >
+              <span
+                id="grand-total-amount"
+                class="info-value grand-total-value"
+                >Total Amount = 0.00</span
+              >
+            </div>
+          </div>
+
+          <div class="header-title">
+            <img
+              src="https://ibnsinasylhet.reviewyoursite.co.uk/wp-content/uploads/2020/06/logo.png"
+              alt="IBN SINA Logo"
+              style="height: 70px"
+            />
+            <div>
+              <br />
+              <h5>بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</h5>
+              <br />
+              <h1>The IBN SINA Pharmaceutical Industry PLC</h1>
+              <p>ROUTE WISE COLLECTION REPORT(ALL)</p>
+              <p>DINAJPUR DEPOT</p>
+              <marquee class="status-message" direction="left" scrollamount="4">
+                "লা ইলাহা ইল্লাল্লাহু মুহাম্মাদুর রাসুলুল্লাহ"(সা:)
+              </marquee>
+            </div>
+          </div>
+
+          <div class="header-right-group">
+            <div class="header-right">
+              <span id="current-time"></span>
+            </div>
+            <div class="mini-totals-group">
+              <div class="total-info mini-total">
+                <label class="info-label pharma-label">PHARMA</label>
+                <span
+                  id="pharma-total-chemist"
+                  class="info-value pharma-value"
+                  >Total Chemist = 0</span
+                >
+                <span id="pharma-total-amount" class="info-value pharma-value"
+                  >Total Amount = 0.00</span
+                >
+              </div>
+              <div class="total-info mini-total">
+                <label class="info-label sinavision-label">ISV</label>
+                <span
+                  id="sinavision-total-chemist"
+                  class="info-value sinavision-value"
+                  >Total Chemist = 0</span
+                >
+                <span
+                  id="sinavision-total-amount"
+                  class="info-value sinavision-value"
+                  >Total Amount = 0.00</span
+                >
+              </div>
+              <div class="total-info mini-total">
+                <label class="info-label inm-label">INM</label>
+                <span id="inm-total-chemist" class="info-value inm-value"
+                  >Total Chemist = 0</span
+                >
+                <span id="inm-total-amount" class="info-value inm-value"
+                  >Total Amount = 0.00</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- একটাই টুলবার লাইনে: Date (কাস্টম পিকার), Search By, Print/Preview/Save, Prev/Page/Next -->
+        <div class="toolbar-row">
+          <div class="toolbar-item">
+            <label for="ds-date">Date:</label>
+            <div class="date-picker-field">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="3"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <input type="text" id="ds-date" />
+            </div>
+          </div>
+
+          <div class="toolbar-item">
+            <label for="search-by">Search By:</label>
+            <select id="search-by">
+              <option value="all">All</option>
+              <option value="route">Route</option>
+              <option value="category">Category</option>
+              <option value="sl">Sl</option>
+              <option value="chemist">Chemist</option>
+            </select>
+            <input
+              type="text"
+              id="text-filter"
+              placeholder="Search..."
+              style="display: none"
+            />
+            <div
+              class="autocomplete-wrapper"
+              id="route-category-wrapper"
+              style="display: none"
+            >
+              <input
+                type="text"
+                id="route-category-filter"
+                placeholder="Type or select..."
+                autocomplete="off"
+              />
+              <span
+                class="autocomplete-clear"
+                id="route-category-clear"
+                title="Clear"
+                >&times;</span
+              >
+              <div
+                id="route-category-suggestions"
+                class="autocomplete-suggestions"
+              ></div>
+            </div>
+          </div>
+
+          <div class="toolbar-item page-buttons">
+            <button class="print">Print</button>
+            <button class="preview">Preview</button>
+            <button class="save">Save</button>
+          </div>
+
+          <div class="toolbar-item pagination-controls">
+            <button id="prev-page">Prev</button>
+            <span id="page-number-display"></span>
+            <button id="next-page">Next</button>
+          </div>
+
+          <!-- এই দুইটা এলিমেন্ট JS ফাংশনালিটি ঠিক রাখার জন্য রাখা হয়েছে, স্ক্রিনে দেখানো হবে না -->
+          <button id="load-data-btn" style="display: none"></button>
+          <span id="data-source-status" style="display: none"></span>
+        </div>
+      </div>
+      <div class="print-info-row">
+        <div id="route-name-display" class="print-header"></div>
+        <div class="info-item">
+          <span>NAME OF DR :</span>
+          <div class="dr-autocomplete-wrapper">
+            <input
+              type="text"
+              id="dr-name-input"
+              class="fillable-line"
+              placeholder="Type or select DR"
+              autocomplete="off"
+            />
+            <span class="autocomplete-clear" id="dr-name-clear" title="Clear"
+              >&times;</span
+            >
+            <div id="dr-suggestions" class="dr-suggestions"></div>
+          </div>
+        </div>
+        <div class="info-item">
+          <span>SCHEDULE DATE :</span>
+          <input
+            type="text"
+            id="schedule-date-input"
+            class="fillable-line"
+            placeholder="Mmm-dd-yyyy"
+          />
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="main-table">
+          <thead>
+            <tr>
+              <th class="sl-no-col"><div>Sl No</div></th>
+              <th class="text-left"><div>Chemist Name & Mobile Number</div></th>
+              <th><div>Due Amount</div></th>
+              <th class="collection-amount-col">
+                <div>1st Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>2nd Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>3rd Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>4th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>5th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>6th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>7th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>8th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>9th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col">
+                <div>10th Sch Collection</div>
+              </th>
+              <th class="collection-amount-col"><div>Total Collection</div></th>
+              <th class="remarks-col"><div>Remarks</div></th>
+              <th data-column="route" class="text-left">
+                <div>Route Name</div>
+              </th>
+              <th data-column="category" class="text-left">
+                <div>Category & Territory</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="data-table-body"></tbody>
+          <tfoot>
+            <tr class="total-row grand-total-row">
+              <td colspan="2" class="total-title">TOTAL:</td>
+              <td id="total-due">0.00</td>
+              <td><span id="total-col-1">0.00</span></td>
+              <td><span id="total-col-2">0.00</span></td>
+              <td><span id="total-col-3">0.00</span></td>
+              <td><span id="total-col-4">0.00</span></td>
+              <td><span id="total-col-5">0.00</span></td>
+              <td><span id="total-col-6">0.00</span></td>
+              <td><span id="total-col-7">0.00</span></td>
+              <td><span id="total-col-8">0.00</span></td>
+              <td><span id="total-col-9">0.00</span></td>
+              <td><span id="total-col-10">0.00</span></td>
+              <td class="collection-amount-col">
+                <span id="total-col-all"></span>
+              </td>
+              <td class="remarks-col"></td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="user-info-footer">
+      <div class="info-item">
+        <span> Prepared By :</span>
+      </div>
+      <div class="info-item">
+        <span> USER ID :</span>
+        <input
+          type="text"
+          id="user-id-input"
+          class="fillable-line"
+          readonly
+          value="<?= userId ?>"
+        />
+      </div>
+      <div class="info-item">
+        <span>USER NAME :</span>
+        <input
+          type="text"
+          id="user-name-input"
+          class="fillable-line"
+          readonly
+          value="<?= userName ?>"
+        />
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const tableBody = document.getElementById("data-table-body");
+        const mainTable = document.getElementById("main-table");
+
+        // ==================== FIREBASE CONFIG ====================
+        // rutewisereport-dinajpur প্রজেক্ট — যেটাতে DCC_UNPAID/Chemist_List/Field_Force আছে
+        const firebaseConfig = {
+          apiKey: "AIzaSyD7fAzmJxtpypMEykHPfD2muG8xiRFpXR8",
+          authDomain: "rutewisereport-dinajpur.firebaseapp.com",
+          projectId: "rutewisereport-dinajpur",
+          storageBucket: "rutewisereport-dinajpur.firebasestorage.app",
+          messagingSenderId: "1032741639156",
+          appId: "1:1032741639156:web:db0c3a2a3c8b85bff3dfa1",
+          measurementId: "G-DBB0DXD4TN",
+          databaseURL:
+            "https://rutewisereport-dinajpur-default-rtdb.asia-southeast1.firebasedatabase.app",
+        };
+        const fbApp =
+          !firebase.apps || !firebase.apps.length
+            ? firebase.initializeApp(firebaseConfig)
+            : firebase.app();
+        const firestoreDb = firebase.firestore(fbApp);
+        const rtdb = firebase.database(fbApp);
+
+        const BN_MONTH_CODES = [
+          "JAN",
+          "FEB",
+          "MAR",
+          "APR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AUG",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DEC",
+        ];
+
+        function pad2(n) {
+          return String(n).padStart(2, "0");
+        }
+
+        // Uploader অ্যাপের buildDocId(...) এর সাথে মিলিয়ে ডকুমেন্ট আইডি বানানো (Chemist Code)
+        function sanitizeDocId(raw) {
+          return String(raw || "")
+            .trim()
+            .replace(/[.$#\[\]\/]/g, "-");
+        }
+
+        // ds-date (yyyy-mm-dd) থেকে DCC_UNPAID পাথের ইনফো বানানো
+        function buildDccPathInfo(dateValue) {
+          const parts = dateValue.split("-"); // yyyy-mm-dd
+          const year = parts[0];
+          const monthIdx = parseInt(parts[1], 10) - 1;
+          const day = parts[2];
+          const monthCode = BN_MONTH_CODES[monthIdx];
+          const formattedDate = `${day}.${parts[1]}.${year}`;
+          return { year, monthCode, formattedDate };
+        }
+
+        const ALL_DIVISIONS = ["pharma", "inm", "isv"];
+
+        // ---- DCC_UNPAID/{division}/{year}/{month}/{formattedDate} থেকে একটা ডিভিশনের ডাটা টেনে আনা ----
+        async function fetchDccUnpaidData(division, dateValue) {
+          const { year, monthCode, formattedDate } =
+            buildDccPathInfo(dateValue);
+          const path = `DCC_UNPAID/${division}/${year}/${monthCode}/${formattedDate}`;
+          const snapshot = await firestoreDb.collection(path).get();
+
+          const rows = [];
+          snapshot.forEach((doc) => {
+            const d = doc.data();
+            const code = d["Code"] || doc.id;
+            const name = d["Chemist Name"] || "";
+            rows.push({
+              division: division,
+              code: code,
+              chemistName: name,
+              chemistInfo: code ? `${code} - ${name}` : name,
+              address: d["ADRESS"] || d["Address"] || d["ADDRESS"] || "",
+              mobileNumber: d["Mobile"] || d["Mobile Number"] || "",
+              duesAmount: d["Total OS"] || d["Total Amount"] || 0,
+              routeName: d["NAME OF ROUTE"] || "",
+              category: division ? division.toUpperCase() : d["CATEGORY"] || "",
+              territory: d["TR NAME"] || "",
+            });
+          });
+          return { rows, path };
+        }
+
+        // ---- তিনটা ডিভিশন (PHARMA, INM, ISV) একসাথে টেনে এনে একটা লিস্টে মার্জ করা, নির্বাচিত তারিখ অনুযায়ী ----
+        async function fetchAllDivisionsData(dateValue) {
+          const results = await Promise.all(
+            ALL_DIVISIONS.map((div) =>
+              fetchDccUnpaidData(div, dateValue).catch((err) => {
+                console.error(`${div} লোড করতে সমস্যা:`, err);
+                return { rows: [], path: `DCC_UNPAID/${div}/... (লোড ব্যর্থ)` };
+              }),
+            ),
+          );
+
+          let combinedRows = [];
+          const paths = [];
+          results.forEach((res) => {
+            combinedRows = combinedRows.concat(res.rows);
+            paths.push(res.path);
+          });
+
+          // সিরিয়াল নম্বর পুরো মার্জ করা লিস্টের উপর ভিত্তি করে বসানো হচ্ছে
+          combinedRows.forEach((row, idx) => {
+            row.serial = idx + 1;
+          });
+
+          return { rows: combinedRows, paths };
+        }
+
+        // ---- DR লিস্ট (IPI NO + NAME একসাথে) ----
+        // আপলোডার টুল Employee List "DR" ক্যাটেগরির ডাটা সেভ করে Employee_List/DR পাথে
+        // (division অনুযায়ী আলাদা করা হয় না)। প্রতিটা এন্ট্রি একটা object যাতে IPI NO ও NAME ফিল্ড থাকে।
+        // এই পাথে 'category' ও 'total_records' নামে দুইটা মেটাডাটা key-ও একই লেভেলে থাকে,
+        // সেগুলো object না হওয়ায় (বা NAME না থাকায়) এড়িয়ে যাওয়া হয়।
+        // ড্রপডাউনে দেখানো হবে "IPI NO - NAME" ফরম্যাটে।
+        async function fetchDrListFromRTDB() {
+          try {
+            const snap = await rtdb.ref(`Employee_List/DR`).once("value");
+            const combined = new Set();
+            if (snap.exists()) {
+              snap.forEach((child) => {
+                const val = child.val();
+                if (val && typeof val === "object" && val["NAME"]) {
+                  const ipi = String(val["IPI NO"] || "").trim();
+                  const name = String(val["NAME"]).trim();
+                  combined.add(ipi ? `${ipi} - ${name}` : name);
+                }
+              });
+            }
+            return Array.from(combined).sort((a, b) => a.localeCompare(b));
+          } catch (e) {
+            console.error("DR list load failed:", e);
+            return [];
+          }
+        }
+
+        // ---- সংগ্রহ করা কালেকশন ডাটা Firestore-এ ফেরত সেভ করা ----
+        // প্রতিটা রেকর্ডের নিজস্ব division অনুযায়ী DCC_COLLECTION/{division}/{year}/{month}/{formattedDate}/{chemistCode}
+        async function saveCollectionDataToFirestore(dataToSave, dateValue) {
+          const { year, monthCode, formattedDate } =
+            buildDccPathInfo(dateValue);
+
+          // division অনুযায়ী গ্রুপ করা, কারণ প্রতিটা ডিভিশনের ডাটা আলাদা পাথে সেভ হয়
+          const groups = {};
+          dataToSave.forEach((item) => {
+            const div = item.division || "unknown";
+            if (!groups[div]) groups[div] = [];
+            groups[div].push(item);
+          });
+
+          const savedPaths = [];
+          for (const division of Object.keys(groups)) {
+            const path = `DCC_COLLECTION/${division}/${year}/${monthCode}/${formattedDate}`;
+            const targetRef = firestoreDb.collection(path);
+            const items = groups[division];
+
+            const BATCH_SIZE = 300;
+            for (let i = 0; i < items.length; i += BATCH_SIZE) {
+              const chunk = items.slice(i, i + BATCH_SIZE);
+              const batch = firestoreDb.batch();
+              chunk.forEach((item) => {
+                const docId = sanitizeDocId(item.code || item.sl);
+                const docRef = targetRef.doc(docId);
+                batch.set(
+                  docRef,
+                  {
+                    ...item,
+                    savedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  },
+                  { merge: true },
+                );
+              });
+              await batch.commit();
+            }
+            savedPaths.push(path);
+          }
+          return savedPaths;
+        }
+
+        // FIX: এই আইডিগুলো এখন আসল HTML tfoot-এর আইডির সাথে মিলিয়ে দেওয়া হয়েছে
+        // (আগে total-1st-sch, total-2nd-sch ইত্যাদি ভুল আইডি ছিল, ফলে গ্র্যান্ড টোটাল আপডেট হতো না)
+        const grandTotals = {
+          "1st_sch": document.getElementById("total-col-1"),
+          "2nd_sch": document.getElementById("total-col-2"),
+          "3rd_sch": document.getElementById("total-col-3"),
+          "4th_sch": document.getElementById("total-col-4"),
+          "5th_sch": document.getElementById("total-col-5"),
+          "6th_sch": document.getElementById("total-col-6"),
+          "7th_sch": document.getElementById("total-col-7"),
+          "8th_sch": document.getElementById("total-col-8"),
+          "9th_sch": document.getElementById("total-col-9"),
+          "10th_sch": document.getElementById("total-col-10"),
+          all: document.getElementById("total-col-all"),
+          due: document.getElementById("total-due"),
+        };
+
+        // Helper: মান শূন্য (0) হলে ফাঁকা স্ট্রিং দেখাবে, নাহলে 2 দশমিকে ফরম্যাট করবে
+        function fmt(value) {
+          const num = parseFloat(value) || 0;
+          return num === 0 ? "" : num.toFixed(2);
+        }
+
+        const loadingOverlay = document.getElementById("loading-overlay");
+        const searchBySelect = document.getElementById("search-by");
+        const textFilterInput = document.getElementById("text-filter");
+        const routeCategoryFilterWrapper = document.getElementById(
+          "route-category-wrapper",
+        );
+        const routeCategoryClearBtn = document.getElementById(
+          "route-category-clear",
+        );
+        const routeCategoryFilterInput = document.getElementById(
+          "route-category-filter",
+        );
+        const routeCategorySuggestionsBox = document.getElementById(
+          "route-category-suggestions",
+        );
+        let routeCategoryOptionsList = [];
+        let routeCategoryActiveIndex = -1;
+        const routeNameDisplay = document.getElementById("route-name-display");
+        const printInfoRow = document.querySelector(".print-info-row");
+        const pharmaTotalChemistSpan = document.getElementById(
+          "pharma-total-chemist",
+        );
+        const pharmaTotalAmountSpan = document.getElementById(
+          "pharma-total-amount",
+        );
+        const sinavisionTotalChemistSpan = document.getElementById(
+          "sinavision-total-chemist",
+        );
+        const sinavisionTotalAmountSpan = document.getElementById(
+          "sinavision-total-amount",
+        );
+        const inmTotalChemistSpan =
+          document.getElementById("inm-total-chemist");
+        const inmTotalAmountSpan = document.getElementById("inm-total-amount");
+        const grandTotalChemistSpan = document.getElementById(
+          "grand-total-chemist",
+        );
+        const grandTotalAmountSpan =
+          document.getElementById("grand-total-amount");
+        const prevPageBtn = document.getElementById("prev-page");
+        const nextPageBtn = document.getElementById("next-page");
+        const pageNumberDisplay = document.getElementById(
+          "page-number-display",
+        );
+        const saveBtn = document.querySelector(".page-buttons .save");
+        const previewBtn = document.querySelector(".page-buttons .preview");
+        const printBtn = document.querySelector(".page-buttons .print");
+        const drNameInput = document.getElementById("dr-name-input");
+        const drNameClearBtn = document.getElementById("dr-name-clear");
+        const scheduleDateInput = document.getElementById(
+          "schedule-date-input",
+        );
+        const currentTimeSpan = document.getElementById("current-time");
+        const dsDateInput = document.getElementById("ds-date");
+        const loadDataBtn = document.getElementById("load-data-btn");
+        const dataSourceStatus = document.getElementById("data-source-status");
+
+        // FIX: হেডারের ঘড়ি এখন প্রতি সেকেন্ডে আপডেট হবে (আগে এটার জন্য কোনো কোড ছিল না)
+        function updateClock() {
+          if (!currentTimeSpan) return;
+          const now = new Date();
+          currentTimeSpan.textContent = now.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        const monthMap = {
+          jan: "01",
+          feb: "02",
+          mar: "03",
+          apr: "04",
+          may: "05",
+          jun: "06",
+          jul: "07",
+          aug: "08",
+          sep: "09",
+          oct: "10",
+          nov: "11",
+          dec: "12",
+        };
+        const monthMapReverse = {
+          "01": "Jan",
+          "02": "Feb",
+          "03": "Mar",
+          "04": "Apr",
+          "05": "May",
+          "06": "Jun",
+          "07": "Jul",
+          "08": "Aug",
+          "09": "Sep",
+          10: "Oct",
+          11: "Nov",
+          12: "Dec",
+        };
+
+        function formatDateToMmmDdYyyy(date) {
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          const monthAbbreviation = monthMapReverse[month] || "";
+          return `${monthAbbreviation}-${day}-${year}`;
+        }
+
+        // ds-date এ কাস্টম, মার্জিত ডেট পিকার (flatpickr) — ডিফল্ট আজকের তারিখ, সিলেক্ট করলেই অটো লোড হবে
+        const dsDatePicker = flatpickr("#ds-date", {
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "d M, Y",
+          altInputClass: "ds-date-alt",
+          defaultDate: "today",
+          disableMobile: true,
+          onChange: function () {
+            loadDataFromFirestore();
+          },
+        });
+
+        if (scheduleDateInput) {
+          const today = new Date();
+          scheduleDateInput.value = formatDateToMmmDdYyyy(today);
+          scheduleDateInput.addEventListener("input", function (e) {
+            let value = e.target.value;
+            value = value.replace(/[^a-zA-Z0-9-]/g, "");
+            e.target.value = value;
+          });
+          scheduleDateInput.addEventListener("blur", function (e) {
+            const value = e.target.value.toLowerCase();
+            const parts = value.split("-");
+            if (parts.length === 3) {
+              const monthPart = parts[0];
+              const dayPart = parts[1];
+              const yearPart = parts[2];
+              const isValidFormat =
+                monthPart.length === 3 &&
+                monthMap.hasOwnProperty(monthPart) &&
+                dayPart.length === 2 &&
+                !isNaN(dayPart) &&
+                yearPart.length === 4 &&
+                !isNaN(yearPart);
+              if (isValidFormat) {
+                const inputDate = new Date(
+                  `${monthMap[monthPart]}-${dayPart}-${yearPart}`,
+                );
+                if (
+                  isNaN(inputDate.getTime()) ||
+                  inputDate.getMonth() + 1 != monthMap[monthPart] ||
+                  inputDate.getDate() != parseInt(dayPart)
+                ) {
+                  alert("Invalid date. Please check the month and day.");
+                  e.target.value = "";
+                }
+              } else {
+                alert(
+                  "Invalid date format. Please use Mmm-dd-yyyy, e.g., Sep-09-2025.",
+                );
+                e.target.value = "";
+              }
+            } else if (value.length > 0 && value.length < 10) {
+              alert(
+                "Incomplete date format. Please use Mmm-dd-yyyy, e.g., Sep-09-2025.",
+              );
+              e.target.value = "";
+            }
+          });
+        }
+
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const rowsPerPage = 20;
+        let currentDateValue = dsDateInput.value;
+
+        function showLoader(message = "Data Loading Please Wait......") {
+          document.querySelector(".loading-text").innerText = message;
+          loadingOverlay.style.display = "flex";
+        }
+
+        function hideLoader() {
+          loadingOverlay.style.display = "none";
+        }
+
+        function renderTable(data, page) {
+          tableBody.innerHTML = "";
+          const start = (page - 1) * rowsPerPage;
+          const end = start + rowsPerPage;
+          const pageData = data.slice(start, end);
+          if (pageData.length === 0) {
+            tableBody.innerHTML =
+              '<tr><td colspan="17">No data available for this page.</td></tr>';
+          }
+          pageData.forEach((row, index) => {
+            const tr = document.createElement("tr");
+            tr.dataset.sl = row.serial;
+            tr.dataset.code = row.code;
+            tr.dataset.division = row.division;
+            tr.dataset.chemist = row.chemistName;
+            tr.dataset.route = row.routeName;
+            tr.dataset.category = row.category;
+            tr.dataset.territory = row.territory;
+            const newSlNo = start + index + 1;
+            tr.innerHTML = `
+                <td data-column="sl">${newSlNo}</td>
+                <td class="text-left">
+                    <div class="chemist-info" data-column="chemist">
+                        <span data-initial-due="${row.duesAmount}">${row.chemistInfo}</span>
+                        <span class="chemist-address">${row.address}</span>
+                        <input type="text" class="mobile-input" placeholder="Mobile No" value="${row.mobileNumber}">
+                    </div>
+                </td>
+                <td class="due-amount" data-initial-due="${parseFloat(row.duesAmount).toFixed(2)}">${parseFloat(row.duesAmount).toFixed(2)}</td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="1" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="2" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="3" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="4" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="5" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="6" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="7" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="8" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="9" value=""></td>
+                <td class="collection-amount-col"><input type="text" class="collection-input" data-col="10" value=""></td>
+                <td class="collection-amount-col total-collection"></td>
+                <td class="remarks-col"><input type="text" placeholder=""></td>
+                <td data-column="route" class="text-left">${row.routeName}</td>
+                <td data-column="category" class="text-left">${row.category}<br>${row.territory || ""}</td>
+            `;
+            tableBody.appendChild(tr);
+          });
+
+          document
+            .querySelectorAll(
+              ".collection-input, .mobile-input, .remarks-col input",
+            )
+            .forEach((input) => {
+              input.addEventListener("input", updateAllTotals);
+              input.addEventListener("input", handleCollectionInput);
+              input.addEventListener("change", saveDataToLocalStorage);
+            });
+
+          loadDataFromLocalStorage();
+
+          updatePaginationButtons(data.length);
+          updateAllTotals();
+        }
+
+        function displayData(data) {
+          hideLoader();
+          if (!data || data.length === 0) {
+            tableBody.innerHTML =
+              '<tr><td colspan="17">No data available.</td></tr>';
+            allData = [];
+            filteredData = [];
+            updateDashboardTotals();
+            updatePaginationButtons(0);
+            return;
+          }
+          allData = data;
+          filteredData = data;
+          populateRouteCategoryFilter("route");
+          filterTable();
+        }
+
+        // ---- মূল "Load Data" বাটন — Firestore থেকে তিনটা ডিভিশনের DCC_UNPAID ডাটা একসাথে টেনে আনে ----
+        async function loadDataFromFirestore() {
+          const dateValue = dsDateInput.value;
+          if (!dateValue) {
+            alert("অনুগ্রহ করে একটি তারিখ সিলেক্ট করুন।");
+            return;
+          }
+          currentDateValue = dateValue;
+
+          showLoader();
+          dataSourceStatus.textContent = "লোড হচ্ছে...";
+          try {
+            const { rows, paths } = await fetchAllDivisionsData(dateValue);
+            dataSourceStatus.textContent = `সোর্স: PHARMA + INM + ISV (${rows.length} টি রেকর্ড)`;
+            displayData(rows);
+
+            // DR লিস্ট তিনটা ডিভিশনের ফিল্ড ফোর্স থেকেই রিফ্রেশ করা
+            drListData = await fetchDrListFromRTDB();
+          } catch (err) {
+            console.error(err);
+            hideLoader();
+            dataSourceStatus.textContent = "ডাটা লোড ব্যর্থ হয়েছে।";
+            alert(
+              "ডাটা লোড করতে সমস্যা হয়েছে: " +
+                (err && err.message ? err.message : String(err)),
+            );
+          }
+        }
+
+        loadDataBtn.addEventListener("click", loadDataFromFirestore);
+
+        function updateDashboardTotals() {
+          let pharmaChemist = 0;
+          let pharmaAmount = 0;
+          let sinavisionChemist = 0;
+          let sinavisionAmount = 0;
+          let inmChemist = 0;
+          let inmAmount = 0;
+          let grandTotalChemist = 0;
+          let grandTotalAmount = 0;
+
+          // FIX: কমা-ফরম্যাটেড সংখ্যা (যেমন "1,250.00") থেকেও সঠিক amount বের করার জন্য
+          function parseAmount(value) {
+            if (value === null || value === undefined) return 0;
+            const cleaned = String(value).replace(/,/g, "").trim();
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : num;
+          }
+
+          filteredData.forEach((row) => {
+            const amount = parseAmount(row.duesAmount);
+            const category = (row.category || "").toUpperCase();
+
+            if (category.includes("PHARMA")) {
+              pharmaChemist++;
+              pharmaAmount += amount;
+            } else if (category.includes("ISV")) {
+              sinavisionChemist++;
+              sinavisionAmount += amount;
+            } else if (category.includes("INM")) {
+              inmChemist++;
+              inmAmount += amount;
+            }
+
+            grandTotalChemist++;
+            grandTotalAmount += amount;
+          });
+
+          // FIX: innerText এর বদলে textContent ব্যবহার করা হলো (রিলায়েবল আপডেটের জন্য)
+          pharmaTotalChemistSpan.textContent = `Total Chemist = ${pharmaChemist}`;
+          pharmaTotalAmountSpan.textContent = `Total Amount = ${pharmaAmount.toFixed(2)}`;
+          sinavisionTotalChemistSpan.textContent = `Total Chemist = ${sinavisionChemist}`;
+          sinavisionTotalAmountSpan.textContent = `Total Amount = ${sinavisionAmount.toFixed(2)}`;
+          inmTotalChemistSpan.textContent = `Total Chemist = ${inmChemist}`;
+          inmTotalAmountSpan.textContent = `Total Amount = ${inmAmount.toFixed(2)}`;
+          grandTotalChemistSpan.textContent = `Total Chemist = ${grandTotalChemist}`;
+          grandTotalAmountSpan.textContent = `Total Amount = ${grandTotalAmount.toFixed(2)}`;
+        }
+        function updateAllTotals() {
+          let totalCol1stSch = 0;
+          let totalCol2ndSch = 0;
+          let totalCol3rdSch = 0;
+          let totalCol4thSch = 0;
+          let totalCol5thSch = 0;
+          let totalCol6thSch = 0;
+          let totalCol7thSch = 0;
+          let totalCol8thSch = 0;
+          let totalCol9thSch = 0;
+          let totalCol10thSch = 0;
+          let totalDue = 0;
+          const visibleRows = Array.from(
+            document.querySelectorAll("tbody tr"),
+          ).filter((row) => row.style.display !== "none");
+          visibleRows.forEach((row) => {
+            const dueAmountCell = row.querySelector(".due-amount");
+            if (!dueAmountCell) return;
+            const initialDueAmount =
+              parseFloat(dueAmountCell.dataset.initialDue) || 0;
+            const collectionInputsInRow =
+              row.querySelectorAll(".collection-input");
+            let rowCollectionTotal = 0;
+            collectionInputsInRow.forEach((input) => {
+              const value = parseFloat(input.value) || 0;
+              if (!input.readOnly) {
+                rowCollectionTotal += value;
+              }
+              const col = input.dataset.col;
+              if (col === "1") totalCol1stSch += value;
+              else if (col === "2") totalCol2ndSch += value;
+              else if (col === "3") totalCol3rdSch += value;
+              else if (col === "4") totalCol4thSch += value;
+              else if (col === "5") totalCol5thSch += value;
+              else if (col === "6") totalCol6thSch += value;
+              else if (col === "7") totalCol7thSch += value;
+              else if (col === "8") totalCol8thSch += value;
+              else if (col === "9") totalCol9thSch += value;
+              else if (col === "10") totalCol10thSch += value;
+            });
+            // FIX: রো লেভেলে টোটাল কালেকশন ও ডিউ অ্যামাউন্ট শূন্য হলে ফাঁকা দেখাবে
+            const rowTotalCell = row.querySelector(".total-collection");
+            rowTotalCell.innerText = fmt(rowCollectionTotal);
+            const remainingDue = initialDueAmount - rowCollectionTotal;
+            dueAmountCell.innerText =
+              remainingDue === 0 ? "" : remainingDue.toFixed(2);
+            totalDue += remainingDue;
+          });
+          let totalAllCollection =
+            totalCol1stSch +
+            totalCol2ndSch +
+            totalCol3rdSch +
+            totalCol4thSch +
+            totalCol5thSch +
+            totalCol6thSch +
+            totalCol7thSch +
+            totalCol8thSch +
+            totalCol9thSch +
+            totalCol10thSch;
+
+          // FIX: গ্র্যান্ড টোটাল রো — এখন সঠিক এলিমেন্ট পাওয়া যাচ্ছে এবং শূন্য হলে ফাঁকা দেখাবে
+          if (grandTotals["1st_sch"])
+            grandTotals["1st_sch"].innerText = fmt(totalCol1stSch);
+          if (grandTotals["2nd_sch"])
+            grandTotals["2nd_sch"].innerText = fmt(totalCol2ndSch);
+          if (grandTotals["3rd_sch"])
+            grandTotals["3rd_sch"].innerText = fmt(totalCol3rdSch);
+          if (grandTotals["4th_sch"])
+            grandTotals["4th_sch"].innerText = fmt(totalCol4thSch);
+          if (grandTotals["5th_sch"])
+            grandTotals["5th_sch"].innerText = fmt(totalCol5thSch);
+          if (grandTotals["6th_sch"])
+            grandTotals["6th_sch"].innerText = fmt(totalCol6thSch);
+          if (grandTotals["7th_sch"])
+            grandTotals["7th_sch"].innerText = fmt(totalCol7thSch);
+          if (grandTotals["8th_sch"])
+            grandTotals["8th_sch"].innerText = fmt(totalCol8thSch);
+          if (grandTotals["9th_sch"])
+            grandTotals["9th_sch"].innerText = fmt(totalCol9thSch);
+          if (grandTotals["10th_sch"])
+            grandTotals["10th_sch"].innerText = fmt(totalCol10thSch);
+          if (grandTotals["all"])
+            grandTotals["all"].innerText = fmt(totalAllCollection);
+          if (grandTotals["due"]) grandTotals["due"].innerText = fmt(totalDue);
+        }
+        function filterTable() {
+          const filterBy = searchBySelect.value;
+          const query =
+            filterBy === "route" || filterBy === "category"
+              ? routeCategoryFilterInput.value.toLowerCase().trim()
+              : textFilterInput.value.toLowerCase();
+
+          filteredData = allData.filter((row) => {
+            let cellValue = "";
+
+            if (filterBy === "all") {
+              return JSON.stringify(Object.values(row))
+                .toLowerCase()
+                .includes(query);
+            } else {
+              if (filterBy === "sl") {
+                cellValue = String(row.serial).toLowerCase();
+              } else if (filterBy === "chemist") {
+                cellValue = row.chemistName.toLowerCase();
+              } else if (filterBy === "route") {
+                cellValue = row.routeName.toLowerCase();
+              } else if (filterBy === "category") {
+                // ক্যাটাগরি ফিল্টারিং লজিক
+                cellValue = row.category.toLowerCase();
+              }
+
+              // যদি query খালি হয় তবে সব ডেটা দেখাও, অন্যথায় cellValue query অন্তর্ভুক্ত করে কি না দেখাও
+              return query === "" || cellValue.includes(query);
+            }
+          });
+
+          updateDashboardTotals();
+          currentPage = 1;
+          renderTable(filteredData, currentPage);
+
+          // প্রিন্ট ইনফো রো আপডেট করা
+          if (filterBy === "route" && query !== "") {
+            routeNameDisplay.innerText = `ROUTE NAME: ${routeCategoryFilterInput.value.trim()}`;
+            printInfoRow.style.display = "flex";
+          } else {
+            routeNameDisplay.innerText = "";
+            printInfoRow.style.display = "none";
+          }
+        }
+
+        function populateRouteCategoryFilter(filterType) {
+          const uniqueValues = new Set();
+
+          // ক্যাটাগরি ফিল্টারের জন্য নির্দিষ্ট মান
+          if (filterType === "category") {
+            // এখানে নির্দিষ্ট তিনটি ক্যাটাগরি যোগ করা হলো
+            const categories = ["PHARMA", "INM", "ISV"];
+            categories.forEach((cat) => uniqueValues.add(cat));
+          } else {
+            // অন্যান্য ফিল্টার টাইপের জন্য (যেমন Route) ডেটা থেকে মান সংগ্রহ করা হবে
+            allData.forEach((row) => {
+              if (row[filterType + "Name"]) {
+                uniqueValues.add(row[filterType + "Name"].trim());
+              } else if (row[filterType]) {
+                uniqueValues.add(row[filterType].trim());
+              }
+            });
+          }
+
+          // সার্চযোগ্য ড্রপডাউনের জন্য অপশন লিস্ট তৈরি করা হলো এবং ইনপুট খালি করা হলো (= All)
+          routeCategoryOptionsList = Array.from(uniqueValues).sort();
+          routeCategoryFilterInput.value = "";
+          if (routeCategoryClearBtn) {
+            routeCategoryClearBtn.style.display = "none";
+          }
+        }
+
+        // ইনপুটে লেখা থাকলে Clear (X) বাটন দেখাবে, খালি থাকলে লুকাবে
+        function toggleRouteCategoryClearBtn() {
+          if (routeCategoryClearBtn) {
+            routeCategoryClearBtn.style.display =
+              routeCategoryFilterInput.value.trim() !== "" ? "block" : "none";
+          }
+        }
+
+        // Route পরিবর্তন হলে আগে সিলেক্ট করা DR নাম রিসেট করে দেওয়ার জন্য (রুট বদলালে DR প্রাসঙ্গিক থাকে না)
+        function resetDrNameSelectionOnRouteChange() {
+          if (
+            searchBySelect.value !== "route" &&
+            searchBySelect.value !== "category"
+          )
+            return; // শুধু Route ফিল্টারের ক্ষেত্রেই DR রিসেট হবে, Category-তে নয়
+          if (drNameInput && drNameInput.value.trim() !== "") {
+            drNameInput.value = "";
+            if (typeof toggleDrNameClearBtn === "function")
+              toggleDrNameClearBtn();
+            if (drSuggestionsBox) drSuggestionsBox.style.display = "none";
+          }
+        }
+
+        // --- Route/Category সার্চযোগ্য ড্রপডাউন ---
+        function renderRouteCategorySuggestions(list) {
+          routeCategoryActiveIndex = -1;
+          routeCategorySuggestionsBox.innerHTML = "";
+
+          const allItem = document.createElement("div");
+          allItem.textContent = "All";
+          allItem.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            routeCategoryFilterInput.value = "";
+            toggleRouteCategoryClearBtn();
+            routeCategorySuggestionsBox.style.display = "none";
+            resetDrNameSelectionOnRouteChange();
+            filterTable();
+          });
+          routeCategorySuggestionsBox.appendChild(allItem);
+
+          list.slice(0, 50).forEach((name) => {
+            const item = document.createElement("div");
+            item.textContent = name;
+            item.addEventListener("mousedown", (e) => {
+              e.preventDefault();
+              routeCategoryFilterInput.value = name;
+              toggleRouteCategoryClearBtn();
+              routeCategorySuggestionsBox.style.display = "none";
+              resetDrNameSelectionOnRouteChange();
+              filterTable();
+            });
+            routeCategorySuggestionsBox.appendChild(item);
+          });
+
+          routeCategorySuggestionsBox.style.display = "flex";
+        }
+
+        function showFilteredRouteCategorySuggestions() {
+          const query = routeCategoryFilterInput.value.toLowerCase().trim();
+          const filtered =
+            query === ""
+              ? routeCategoryOptionsList
+              : routeCategoryOptionsList.filter((name) =>
+                  name.toLowerCase().includes(query),
+                );
+          renderRouteCategorySuggestions(filtered);
+        }
+
+        function updateRouteCategoryActiveItem(items) {
+          items.forEach((item) => item.classList.remove("active"));
+          if (items[routeCategoryActiveIndex]) {
+            items[routeCategoryActiveIndex].classList.add("active");
+            items[routeCategoryActiveIndex].scrollIntoView({
+              block: "nearest",
+            });
+          }
+        }
+
+        if (routeCategoryFilterInput) {
+          if (routeCategoryClearBtn) {
+            routeCategoryClearBtn.addEventListener("mousedown", function (e) {
+              e.preventDefault();
+              routeCategoryFilterInput.value = "";
+              toggleRouteCategoryClearBtn();
+              routeCategorySuggestionsBox.style.display = "none";
+              resetDrNameSelectionOnRouteChange();
+              filterTable();
+              routeCategoryFilterInput.focus();
+            });
+          }
+
+          // টাইপ করার সাথে সাথে সাজেশন দেখাবে এবং টেবিলও লাইভ ফিল্টার হবে
+          routeCategoryFilterInput.addEventListener("input", function () {
+            showFilteredRouteCategorySuggestions();
+            toggleRouteCategoryClearBtn();
+            resetDrNameSelectionOnRouteChange();
+            filterTable();
+          });
+
+          // ক্লিক/ফোকাস করলে সম্পূর্ণ লিস্ট (বা এখনকার টেক্সট অনুযায়ী ফিল্টার করা লিস্ট) দেখাবে
+          routeCategoryFilterInput.addEventListener("focus", function () {
+            this.select();
+            showFilteredRouteCategorySuggestions();
+          });
+          routeCategoryFilterInput.addEventListener(
+            "click",
+            showFilteredRouteCategorySuggestions,
+          );
+
+          // কীবোর্ড দিয়ে (Arrow key + Enter) সিলেক্ট করার সুবিধা
+          routeCategoryFilterInput.addEventListener("keydown", function (e) {
+            const items = routeCategorySuggestionsBox.querySelectorAll("div");
+            if (
+              items.length === 0 ||
+              routeCategorySuggestionsBox.style.display === "none"
+            )
+              return;
+
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              routeCategoryActiveIndex =
+                (routeCategoryActiveIndex + 1) % items.length;
+              updateRouteCategoryActiveItem(items);
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              routeCategoryActiveIndex =
+                (routeCategoryActiveIndex - 1 + items.length) % items.length;
+              updateRouteCategoryActiveItem(items);
+            } else if (e.key === "Enter") {
+              if (
+                routeCategoryActiveIndex >= 0 &&
+                items[routeCategoryActiveIndex]
+              ) {
+                e.preventDefault();
+                const text = items[routeCategoryActiveIndex].textContent;
+                routeCategoryFilterInput.value = text === "All" ? "" : text;
+                toggleRouteCategoryClearBtn();
+                routeCategorySuggestionsBox.style.display = "none";
+                routeCategoryActiveIndex = -1;
+                resetDrNameSelectionOnRouteChange();
+                filterTable();
+              }
+            } else if (e.key === "Escape") {
+              routeCategorySuggestionsBox.style.display = "none";
+              routeCategoryActiveIndex = -1;
+            }
+          });
+
+          document.addEventListener("click", function (e) {
+            if (!e.target.closest("#route-category-wrapper")) {
+              routeCategorySuggestionsBox.style.display = "none";
+            }
+          });
+        }
+
+        function updatePaginationButtons(totalRows) {
+          const totalPages = Math.ceil(totalRows / rowsPerPage);
+          pageNumberDisplay.innerText = `Page ${currentPage} of ${totalPages}`;
+          prevPageBtn.disabled = currentPage === 1;
+          nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+        searchBySelect.addEventListener("change", (event) => {
+          const selectedValue = event.target.value;
+          textFilterInput.style.display = "none";
+          routeCategoryFilterWrapper.style.display = "none";
+          routeCategorySuggestionsBox.style.display = "none";
+          if (selectedValue === "sl" || selectedValue === "chemist") {
+            textFilterInput.style.display = "";
+          } else if (
+            selectedValue === "route" ||
+            selectedValue === "category"
+          ) {
+            routeCategoryFilterWrapper.style.display = "inline-block";
+            populateRouteCategoryFilter(selectedValue);
+          }
+          // NEW FIX: Search By বদলালে আগের DR সিলেকশন সবসময় খালি হবে
+          if (drNameInput) {
+            drNameInput.value = "";
+            if (typeof toggleDrNameClearBtn === "function")
+              toggleDrNameClearBtn();
+            if (drSuggestionsBox) drSuggestionsBox.style.display = "none";
+          }
+          filterTable();
+        });
+
+        textFilterInput.addEventListener("input", filterTable);
+        prevPageBtn.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderTable(filteredData, currentPage);
+          }
+        });
+        nextPageBtn.addEventListener("click", () => {
+          const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderTable(filteredData, currentPage);
+          }
+        });
+
+        function collectData() {
+          const dataToSave = [];
+          const tableBody = document.getElementById("data-table-body");
+          const rows = tableBody.querySelectorAll("tr");
+          rows.forEach((row) => {
+            const sl = row.dataset.sl;
+            const code = row.dataset.code;
+            const division = row.dataset.division;
+            const chemistName = row.dataset.chemist;
+            const routeName = row.dataset.route;
+            const category = row.dataset.category;
+            const territory = row.dataset.territory;
+            const mobile = row.querySelector(".mobile-input").value.trim();
+            const dueAmount = row
+              .querySelector(".due-amount")
+              .textContent.trim();
+            const totalCollection = row
+              .querySelector(".total-collection")
+              .textContent.trim();
+            const remarks = row
+              .querySelector(".remarks-col input")
+              .value.trim();
+            const schedules = {};
+            row.querySelectorAll(".collection-input").forEach((input) => {
+              const col = input.dataset.col;
+              schedules[col] = { amount: input.value.trim() };
+            });
+            if (parseFloat(totalCollection) > 0 || remarks !== "") {
+              dataToSave.push({
+                sl: sl,
+                code: code,
+                division: division,
+                chemistName: chemistName,
+                mobile: mobile,
+                dueAmount: dueAmount,
+                totalCollection: totalCollection,
+                remarks: remarks,
+                routeName: routeName,
+                category: category,
+                territory: territory,
+                schedules: schedules,
+              });
+            }
+          });
+          return dataToSave;
+        }
+
+        // ---- Preview: সার্ভার ছাড়াই ক্লায়েন্ট-সাইডে নতুন ট্যাবে প্রিন্ট-প্রিভিউ ----
+        previewBtn.addEventListener("click", () => {
+          addPageTotalsForPrint();
+          const printHead = document.head.innerHTML;
+          const printBody =
+            document.querySelector(".print-main-header").outerHTML +
+            document.querySelector(".print-info-row").outerHTML +
+            document.querySelector(".table-wrapper").outerHTML +
+            document.querySelector(".user-info-footer").outerHTML;
+
+          const previewWindow = window.open("", "_blank");
+          if (!previewWindow) {
+            alert("পপ-আপ ব্লক করা আছে। অনুগ্রহ করে পপ-আপ অনুমতি দিন।");
+            return;
+          }
+          previewWindow.document.write(`<!DOCTYPE html><html><head>${printHead}
+            <style>.print-main-header{display:block !important;} body{padding:20px;}</style>
+        </head><body>${printBody}</body></html>`);
+          previewWindow.document.close();
+          updateAllTotals();
+        });
+
+        printBtn.addEventListener("click", () => {
+          // FIX: প্রিন্টের আগেও শূন্য মান ফাঁকা রাখা হচ্ছে (আগের '0' এর বদলে '')
+          const totalCollectionCells =
+            document.querySelectorAll(".total-collection");
+          totalCollectionCells.forEach((cell) => {
+            const value = parseFloat(cell.textContent) || 0;
+            cell.textContent = value === 0 ? "" : value.toFixed(0);
+          });
+          const totalFooterSpan = document.getElementById("total-col-all");
+          if (totalFooterSpan) {
+            const value = parseFloat(totalFooterSpan.textContent) || 0;
+            totalFooterSpan.textContent =
+              value === 0 ? "" : totalFooterSpan.textContent;
+          }
+          addPageTotalsForPrint();
+          window.print();
+          const mediaQueryList = window.matchMedia("print");
+          mediaQueryList.addListener((mql) => {
+            if (!mql.matches) {
+              updateAllTotals();
+            }
+          });
+        });
+
+        function addPageTotalsForPrint() {
+          document
+            .querySelectorAll(".page-total-row")
+            .forEach((row) => row.remove());
+          const rows = Array.from(tableBody.querySelectorAll("tr"));
+          const rowsPerPagePrint = 20;
+          for (let i = 0; i < rows.length; i += rowsPerPagePrint) {
+            const pageRows = rows.slice(i, i + rowsPerPagePrint);
+            let pageTotalDue = 0;
+            let pageTotalCol1stSch = 0;
+            let pageTotalCol2ndSch = 0;
+            let pageTotalCol3rdSch = 0;
+            let pageTotalCol4thSch = 0;
+            let pageTotalCol5thSch = 0;
+            let pageTotalCol6thSch = 0;
+            let pageTotalCol7thSch = 0;
+            let pageTotalCol8thSch = 0;
+            let pageTotalCol9thSch = 0;
+            let pageTotalCol10thSch = 0;
+            let pageTotalColAll = 0;
+            pageRows.forEach((row) => {
+              const dueCell = row.querySelector(".due-amount");
+              if (!dueCell) return;
+              const dueAmount = parseFloat(dueCell.innerText) || 0;
+              const col1stSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="1"]').value,
+                ) || 0;
+              const col2ndSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="2"]').value,
+                ) || 0;
+              const col3rdSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="3"]').value,
+                ) || 0;
+              const col4thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="4"]').value,
+                ) || 0;
+              const col5thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="5"]').value,
+                ) || 0;
+              const col6thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="6"]').value,
+                ) || 0;
+              const col7thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="7"]').value,
+                ) || 0;
+              const col8thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="8"]').value,
+                ) || 0;
+              const col9thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="9"]').value,
+                ) || 0;
+              const col10thSch =
+                parseFloat(
+                  row.querySelector('.collection-input[data-col="10"]').value,
+                ) || 0;
+              pageTotalDue += dueAmount;
+              pageTotalCol1stSch += col1stSch;
+              pageTotalCol2ndSch += col2ndSch;
+              pageTotalCol3rdSch += col3rdSch;
+              pageTotalCol4thSch += col4thSch;
+              pageTotalCol5thSch += col5thSch;
+              pageTotalCol6thSch += col6thSch;
+              pageTotalCol7thSch += col7thSch;
+              pageTotalCol8thSch += col8thSch;
+              pageTotalCol9thSch += col9thSch;
+              pageTotalCol10thSch += col10thSch;
+            });
+            pageTotalColAll =
+              pageTotalCol1stSch +
+              pageTotalCol2ndSch +
+              pageTotalCol3rdSch +
+              pageTotalCol4thSch +
+              pageTotalCol5thSch +
+              pageTotalCol6thSch +
+              pageTotalCol7thSch +
+              pageTotalCol8thSch +
+              pageTotalCol9thSch +
+              pageTotalCol10thSch;
+            const totalRow = document.createElement("tr");
+            totalRow.classList.add("total-row", "page-total-row");
+            // FIX: পেজ টোটালেও শূন্য মান ফাঁকা দেখানো হচ্ছে
+            totalRow.innerHTML = `
+                <td colspan="2" class="total-title">TOTAL:</td>
+                <td>${fmt(pageTotalDue)}</td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol1stSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol2ndSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol3rdSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol4thSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol5thSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol6thSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol7thSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol8thSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol9thSch)}</span></td>
+                <td class="collection-amount-col"><span>${fmt(pageTotalCol10thSch)}</span></td>
+                <td class="collection-amount-col"><span>${pageTotalColAll === 0 ? "" : pageTotalColAll.toFixed(0)}</span></td>
+                <td class="remarks-col"></td>
+                <td colspan="2"></td>
+            `;
+            if (i + rowsPerPagePrint < rows.length) {
+              rows[i + rowsPerPagePrint - 1].after(totalRow);
+              const pageBreakRow = document.createElement("tr");
+              pageBreakRow.classList.add("page-break");
+              rows[i + rowsPerPagePrint - 1].after(pageBreakRow);
+            }
+          }
+        }
+
+        function validateData() {
+          let isValid = true;
+          document.querySelectorAll("tbody tr").forEach((tr) => {
+            const dueCell = tr.querySelector(".due-amount");
+            if (!dueCell) return;
+            const dueAmount = parseFloat(dueCell.dataset.initialDue) || 0;
+            const totalCollectionCell = tr.querySelector(".total-collection");
+            const totalCollection =
+              parseFloat(totalCollectionCell.innerText) || 0;
+            if (totalCollection > dueAmount) {
+              alert(
+                `Alert: Total collection for a chemist cannot be greater than the dues amount. Please check the amount entered.`,
+              );
+              tr.style.backgroundColor = "#ffcccc";
+              isValid = false;
+            } else {
+              tr.style.backgroundColor = "";
+            }
+          });
+          return isValid;
+        }
+
+        function handleCollectionInput(event) {
+          const input = event.target;
+          const row = input.closest("tr");
+          const dueAmount =
+            parseFloat(row.querySelector(".due-amount").dataset.initialDue) ||
+            0;
+          let rowCollectionTotal = 0;
+          row.querySelectorAll(".collection-input").forEach((i) => {
+            rowCollectionTotal += parseFloat(i.value) || 0;
+          });
+          if (rowCollectionTotal > dueAmount) {
+            alert(
+              "Total collection cannot exceed the dues amount. Please adjust the input.",
+            );
+            input.value = "";
+            updateAllTotals();
+          }
+        }
+
+        function displayStatusMessage(message, type) {
+          const statusMessageDiv = document.createElement("div");
+          statusMessageDiv.textContent = message;
+
+          if (type === "success") {
+            statusMessageDiv.style.color = "green";
+            statusMessageDiv.style.fontWeight = "bold";
+          } else if (type === "error") {
+            statusMessageDiv.style.color = "red";
+            statusMessageDiv.style.fontWeight = "bold";
+          }
+
+          const container = document.querySelector(".container");
+          container.insertBefore(statusMessageDiv, container.firstChild);
+
+          setTimeout(() => {
+            statusMessageDiv.remove();
+          }, 2000);
+        }
+
+        function saveDataToLocalStorage() {
+          const dataToSave = {};
+          const rows = document.querySelectorAll("tbody tr");
+          rows.forEach((row) => {
+            const key = row.dataset.code || row.dataset.sl;
+            const rowData = {
+              mobile: row.querySelector(".mobile-input").value.trim(),
+              remarks: row.querySelector(".remarks-col input").value.trim(),
+              schedules: {},
+            };
+            row.querySelectorAll(".collection-input").forEach((input) => {
+              const col = input.dataset.col;
+              rowData.schedules[col] = { amount: input.value.trim() };
+            });
+            dataToSave[key] = rowData;
+          });
+          localStorage.setItem("savedInputs", JSON.stringify(dataToSave));
+        }
+
+        function loadDataFromLocalStorage() {
+          const savedData = localStorage.getItem("savedInputs");
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            document.querySelectorAll("tbody tr").forEach((row) => {
+              const key = row.dataset.code || row.dataset.sl;
+              if (parsedData[key]) {
+                const rowData = parsedData[key];
+                const mobileInput = row.querySelector(".mobile-input");
+                const remarksInput = row.querySelector(".remarks-col input");
+                mobileInput.value = rowData.mobile || "";
+                remarksInput.value = rowData.remarks || "";
+                row.querySelectorAll(".collection-input").forEach((input) => {
+                  const col = input.dataset.col;
+                  if (rowData.schedules[col] && rowData.schedules[col].amount) {
+                    input.value = rowData.schedules[col].amount;
+                  }
+                });
+              }
+            });
+          }
+          updateAllTotals();
+        }
+
+        function updateInputFieldsAfterSave() {
+          document.querySelectorAll("tbody tr").forEach((tr) => {
+            const collectionInputs = tr.querySelectorAll(".collection-input");
+            const mobileInput = tr.querySelector(".mobile-input");
+            const remarksInput = tr.querySelector(".remarks-col input");
+            const totalCollectionCell = tr.querySelector(".total-collection");
+
+            if (mobileInput.value.trim() !== "") {
+              mobileInput.setAttribute("readonly", true);
+            }
+            collectionInputs.forEach((input) => {
+              if (input.value.trim() !== "") {
+                input.setAttribute("readonly", true);
+              }
+            });
+            if (remarksInput.value.trim() !== "") {
+              remarksInput.setAttribute("readonly", true);
+            }
+
+            totalCollectionCell.textContent = "";
+            remarksInput.value = "";
+          });
+
+          // FIX: সেভের পর ফুটার টোটাল রিসেট হলে '0.00' নয়, ফাঁকা দেখাবে
+          const totalAllCollectionFooter =
+            document.getElementById("total-col-all");
+          if (totalAllCollectionFooter) {
+            totalAllCollectionFooter.textContent = "";
+          }
+          updateAllTotals();
+        }
+
+        saveBtn.addEventListener("click", async () => {
+          if (!validateData()) {
+            return;
+          }
+
+          const dataToSave = collectData();
+          if (!dataToSave || dataToSave.length === 0) {
+            alert("কোনো ডাটা সেভ করার জন্য নেই।");
+            return;
+          }
+
+          showLoader("Saving data...");
+          try {
+            const paths = await saveCollectionDataToFirestore(
+              dataToSave,
+              currentDateValue,
+            );
+            hideLoader();
+            displayStatusMessage(
+              `ডাটা সফলভাবে সেভ হয়েছে! (${paths.join(", ")}) 😊`,
+              "success",
+            );
+            updateInputFieldsAfterSave();
+            localStorage.removeItem("savedInputs");
+          } catch (error) {
+            hideLoader();
+            displayStatusMessage("Error: " + error.message, "error");
+          }
+        });
+
+        // ---- কাস্টম DR সাজেশন ----
+        let drListData = [];
+        let drActiveIndex = -1;
+        const drSuggestionsBox = document.getElementById("dr-suggestions");
+
+        // ইনপুটে লেখা থাকলে Clear (X) বাটন দেখাবে, খালি থাকলে লুকাবে
+        function toggleDrNameClearBtn() {
+          if (drNameClearBtn) {
+            drNameClearBtn.style.display =
+              drNameInput.value.trim() !== "" ? "block" : "none";
+          }
+        }
+
+        function renderDrSuggestions(list) {
+          drActiveIndex = -1;
+          drSuggestionsBox.innerHTML = "";
+          if (list.length === 0) {
+            drSuggestionsBox.style.display = "none";
+            return;
+          }
+          list.slice(0, 50).forEach((name) => {
+            const item = document.createElement("div");
+            item.textContent = name;
+            item.addEventListener("mousedown", (e) => {
+              e.preventDefault();
+              drNameInput.value = name;
+              toggleDrNameClearBtn();
+              drSuggestionsBox.style.display = "none";
+            });
+            drSuggestionsBox.appendChild(item);
+          });
+          drSuggestionsBox.style.display = "flex";
+        }
+
+        if (drNameInput) {
+          function showFilteredSuggestions() {
+            const query = drNameInput.value.toLowerCase().trim();
+            const filtered =
+              query === ""
+                ? drListData
+                : drListData.filter((name) =>
+                    name.toLowerCase().includes(query),
+                  );
+            renderDrSuggestions(filtered);
+          }
+
+          if (drNameClearBtn) {
+            drNameClearBtn.addEventListener("mousedown", function (e) {
+              e.preventDefault();
+              drNameInput.value = "";
+              toggleDrNameClearBtn();
+              drSuggestionsBox.style.display = "none";
+              drNameInput.focus();
+            });
+          }
+
+          drNameInput.addEventListener("input", function () {
+            showFilteredSuggestions();
+            toggleDrNameClearBtn();
+          });
+
+          drNameInput.addEventListener("focus", function () {
+            this.select();
+            showFilteredSuggestions();
+          });
+
+          // ক্লিক করলেও (ফোকাস আগে থেকেই থাকলে focus ইভেন্ট আর ফায়ার হয় না, তাই আলাদাভাবে click যোগ করা হলো)
+          drNameInput.addEventListener("click", showFilteredSuggestions);
+
+          drNameInput.addEventListener("keydown", function (e) {
+            const items = drSuggestionsBox.querySelectorAll("div");
+            if (items.length === 0 || drSuggestionsBox.style.display === "none")
+              return;
+
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              drActiveIndex = (drActiveIndex + 1) % items.length;
+              updateDrActiveItem(items);
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              drActiveIndex = (drActiveIndex - 1 + items.length) % items.length;
+              updateDrActiveItem(items);
+            } else if (e.key === "Enter") {
+              if (drActiveIndex >= 0 && items[drActiveIndex]) {
+                e.preventDefault();
+                drNameInput.value = items[drActiveIndex].textContent;
+                toggleDrNameClearBtn();
+                drSuggestionsBox.style.display = "none";
+                drActiveIndex = -1;
+              }
+            } else if (e.key === "Escape") {
+              drSuggestionsBox.style.display = "none";
+              drActiveIndex = -1;
+            }
+          });
+
+          function updateDrActiveItem(items) {
+            items.forEach((item) => item.classList.remove("active"));
+            if (items[drActiveIndex]) {
+              items[drActiveIndex].classList.add("active");
+              items[drActiveIndex].scrollIntoView({ block: "nearest" });
+            }
+          }
+
+          document.addEventListener("click", function (e) {
+            if (!e.target.closest(".dr-autocomplete-wrapper")) {
+              drSuggestionsBox.style.display = "none";
+            }
+          });
+        }
+
+        // পেজ প্রথম লোডে ডিফল্ট Division + আজকের Date দিয়ে অটো-লোড
+        loadDataFromFirestore();
+      });
+    </script>
+  </body>
+</html>
