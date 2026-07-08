@@ -435,15 +435,17 @@
       .dr-autocomplete-wrapper,
       .autocomplete-wrapper {
         position: relative;
-        display: inline-block;
+        display: inline-flex;
+        flex-direction: column;
+        width: 100%;
       }
 
       /* ---- ইনপুটে টাইপ করলে দেখা যাবে এমন Clear (X) বাটন ---- */
       .autocomplete-clear {
-        display: none;
+        display: none !important;
         position: absolute;
         top: 50%;
-        right: 8px;
+        right: 10px;
         transform: translateY(-50%);
         width: 20px;
         height: 20px;
@@ -467,20 +469,21 @@
       .autocomplete-suggestions {
         display: none;
         position: absolute;
-        top: 100%;
+        top: calc(100% + 4px);
         left: 0;
         min-width: 100%;
-        width: max-content;
-        max-width: 480px;
+        width: 100%;
+        max-width: 100%;
         background-color: #f0f2f5;
         border: none;
         border-radius: 8px;
         max-height: 380px;
         overflow-y: auto;
-        z-index: 100;
+        z-index: 1000;
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
         box-sizing: border-box;
         padding: 8px;
+        display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: 6px;
@@ -488,8 +491,9 @@
 
       #dr-suggestions div,
       .autocomplete-suggestions div {
-        padding: 8px 14px;
+        padding: 6px 10px;
         font-size: 13px;
+        line-height: 1.3;
         font-weight: 500;
         cursor: pointer;
         white-space: nowrap;
@@ -1144,6 +1148,346 @@
           size: landscape;
         }
       }
+
+      /* ---- Compare Dates মোডাল (Compact & Clean) ---- */
+      /* --- Modal & Button Styles --- */
+      .compare-btn {
+        background-color: #6f42c1;
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 13.5px;
+        white-space: nowrap;
+      }
+      .compare-btn:hover {
+        opacity: 0.85;
+      }
+      .compare-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+      .compare-modal-overlay.open {
+        display: flex;
+      }
+      .compare-modal {
+        background: #fff;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 950px;
+        max-height: 90vh;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .compare-modal-header {
+        background: #0b4f8c;
+        color: #fff;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .compare-modal-header h3 {
+        margin: 0;
+        font-size: 15px;
+      }
+      .compare-modal-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .compare-modal-body {
+        padding: 12px 15px;
+        overflow-y: auto;
+        flex-grow: 1;
+      }
+      .compare-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .compare-controls .compare-field {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 1 auto;
+      }
+      .compare-controls .compare-field label {
+        margin-bottom: 0;
+        white-space: nowrap;
+        font-weight: bold;
+        font-size: 11px;
+        color: #0b4f8c;
+        min-width: 85px;
+      }
+      .compare-controls .compare-field select.ds-date-alt,
+      .compare-controls .compare-field .autocomplete-wrapper {
+        width: 150px;
+        min-width: 150px;
+      }
+      .compare-controls .compare-field .autocomplete-wrapper input {
+        width: 150px;
+      }
+      }
+      .compare-run-btn {
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        line-height: 1;
+        height: 36px;
+        font-size: 13px;
+      }
+      .compare-run-btn:hover {
+        opacity: 0.85;
+      }
+      .compare-summary {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .compare-summary .box {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 5px 10px;
+        background: #f8f9fa;
+        font-size: 11.5px;
+        flex: 1;
+        min-width: 130px;
+      }
+      .compare-summary .box b {
+        display: block;
+        font-size: 13.5px;
+        color: #0b4f8c;
+      }
+
+      /* ---- ক্যাটাগরি কার্ডগুলো আরও ছোট ও কমপ্যাক্ট ---- */
+      .category-collection-cards {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .category-collection-card {
+        position: relative;
+        background: #ffffff;
+        border-radius: 7px;
+        padding: 8px 10px;
+        min-width: 180px;
+        flex: 1;
+        border: 1px solid #e7ebf0;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        overflow: hidden;
+      }
+      .category-collection-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3.5px;
+        height: 100%;
+      }
+      .category-collection-card.pharma-card::before {
+        background: #22a06b;
+      }
+      .category-collection-card.inm-card::before {
+        background: #e5484d;
+      }
+      .category-collection-card.isv-card::before {
+        background: #2f6fed;
+      }
+
+      .cc-header {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 4px;
+      }
+      .cc-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .cc-icon svg {
+        width: 11px;
+        height: 11px;
+      }
+      .pharma-card .cc-icon {
+        background: rgba(34, 160, 107, 0.12);
+        color: #22a06b;
+      }
+      .inm-card .cc-icon {
+        background: rgba(229, 72, 77, 0.12);
+        color: #e5484d;
+      }
+      .isv-card .cc-icon {
+        background: rgba(47, 111, 237, 0.12);
+        color: #2f6fed;
+      }
+
+      .cc-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: #000000;
+        text-transform: uppercase;
+      }
+      .cc-total-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #000000;
+        font-variant-numeric: tabular-nums;
+      }
+      .cc-total-label {
+        display: inline;
+        font-size: 9px;
+        color: #000000;
+        margin-left: 3px;
+      }
+      .cc-progress {
+        margin: 5px 0;
+        height: 4px;
+        border-radius: 2px;
+        background: #eef1f4;
+        overflow: hidden;
+      }
+      .cc-progress-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 2px;
+      }
+      .pharma-card .cc-progress-fill {
+        background: #22a06b;
+      }
+      .inm-card .cc-progress-fill {
+        background: #e5484d;
+      }
+      .isv-card .cc-progress-fill {
+        background: #2f6fed;
+      }
+
+      .cc-stats {
+        display: flex;
+        gap: 5px;
+      }
+      .cc-stat {
+        flex: 1;
+        background: #f7f9fb;
+        border-radius: 5px;
+        padding: 3px 5px;
+      }
+      .cc-stat-head {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin-bottom: 1px;
+      }
+      .cc-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+      }
+      .cc-dot-part {
+        background: #f2a65a;
+      }
+      .cc-dot-full {
+        background: #22a06b;
+      }
+      .cc-stat-label {
+        font-size: 8.5px;
+        font-weight: 700;
+        color: #000000;
+        text-transform: uppercase;
+      }
+      .cc-stat-value {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: #000000;
+      }
+      .cc-stat-count {
+        font-size: 8px;
+        color: #000000;
+      }
+
+      .compare-table-wrapper {
+        max-height: 40vh;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        font-size: 12px;
+      }
+      #compare-table th,
+      #compare-table td {
+        padding: 5px 6px;
+      }
+      @media (max-width: 900px) {
+        .category-collection-card {
+          min-width: 100%;
+        }
+      }
+      .compare-table-wrapper {
+        max-height: 55vh;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+      }
+      #compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      #compare-table th,
+      #compare-table td {
+        border: 1px solid #dee2e6;
+        padding: 8px;
+        text-align: center;
+      }
+      #compare-table thead th {
+        position: sticky;
+        top: 0;
+        background: #566573;
+        color: #fff;
+      }
+      #compare-table .text-left {
+        text-align: left;
+      }
+      #compare-table .positive {
+        color: #1a7f37;
+        font-weight: bold;
+      }
+      #compare-table .negative {
+        color: #dc3545;
+        font-weight: bold;
+      }
+      #compare-table tfoot td {
+        font-weight: bold;
+        background: #e9ecef;
+      }
     </style>
   </head>
   <body>
@@ -1179,9 +1523,7 @@
                 class="info-value grand-total-value"
                 >Total Chemist = 0</span
               >
-              <span
-                id="grand-total-amount"
-                class="info-value grand-total-value"
+              <span id="grand-total-amount" class="info-value grand-total-value"
                 >Total Amount = 0.00</span
               >
             </div>
@@ -1213,9 +1555,7 @@
             <div class="mini-totals-group">
               <div class="total-info mini-total">
                 <label class="info-label pharma-label">PHARMA</label>
-                <span
-                  id="pharma-total-chemist"
-                  class="info-value pharma-value"
+                <span id="pharma-total-chemist" class="info-value pharma-value"
                   >Total Chemist = 0</span
                 >
                 <span id="pharma-total-amount" class="info-value pharma-value"
@@ -1321,6 +1661,23 @@
             <button id="prev-page">Prev</button>
             <span id="page-number-display"></span>
             <button id="next-page">Next</button>
+            <div
+              style="
+                margin-left: 10px;
+                display: flex;
+                align-items: center;
+                color: #1a7f37;
+              "
+            >
+              <button
+                style="background-color: #1a7f37; color: white; border: none; padding: 10px 20px; cursor: pointer; hover: background-color: #156d2d;"
+                type="button"
+                id="compare-dates-btn"
+                class="compare-btn"
+              >
+                Report
+              </button>
+            </div>
           </div>
 
           <!-- এই দুইটা এলিমেন্ট JS ফাংশনালিটি ঠিক রাখার জন্য রাখা হয়েছে, স্ক্রিনে দেখানো হবে না -->
@@ -1429,6 +1786,368 @@
         </table>
       </div>
     </div>
+    <!-- ---- Compare Dates মোডাল: দুই তারিখের Due Amount মিলিয়ে কালেকশন বের করার জন্য ---- -->
+    <div class="compare-modal-overlay" id="compare-modal-overlay">
+      <div class="compare-modal">
+        <div class="compare-modal-header">
+          <h3>Yesterday Due − Today Due = Collected</h3>
+          <button
+            type="button"
+            class="compare-modal-close"
+            id="compare-modal-close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="compare-modal-body">
+          <div class="compare-controls">
+            <div class="compare-field">
+              <label for="compare-date-1">From</label>
+              <input type="text" id="compare-date-1" class="ds-date-alt" />
+            </div>
+            <div class="compare-field">
+              <label for="compare-date-2">To</label>
+              <input type="text" id="compare-date-2" class="ds-date-alt" />
+            </div>
+            <button type="button" id="compare-run-btn" class="compare-run-btn">
+              Search
+            </button>
+          </div>
+
+          <div
+            class="compare-summary"
+            id="compare-summary"
+            style="display: none"
+          >
+            <div class="box">
+              <span id="compare-yesterday-date-label"></span>
+              <b id="compare-total-yesterday-due">0.00</b>
+            </div>
+            <div class="box">
+              <span id="compare-today-date-label"></span>
+              <b id="compare-total-today-due">0.00</b>
+            </div>
+            <div class="box">
+              TOTAL COLLECTION
+              <b id="compare-total-collected">0.00</b>
+            </div>
+            <div class="box">
+              TOTAL CHEMIST
+              <b id="compare-total-chemist">0</b>
+            </div>
+          </div>
+
+          <div
+            class="category-collection-cards"
+            id="compare-category-cards"
+            style="display: none"
+          >
+            <div class="category-collection-card pharma-card">
+              <div class="cc-header">
+                <span class="cc-icon" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
+                    ></path>
+                    <path d="m8.5 8.5 7 7"></path>
+                  </svg>
+                </span>
+                <span class="cc-title">PHARMA</span>
+              </div>
+              <div class="cc-total">
+                <span class="cc-total-value" id="compare-pharma-total-amount"
+                  >0</span
+                >
+                <span class="cc-total-label"
+                  >Total Collection ·
+                  <b id="compare-pharma-total-chemist">0</b> chemist</span
+                >
+              </div>
+              <div class="cc-progress">
+                <div
+                  class="cc-progress-fill"
+                  id="compare-pharma-progress"
+                ></div>
+              </div>
+              <div class="cc-stats">
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-part"></span>
+                    <span class="cc-stat-label">Part</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-pharma-part-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-pharma-part-chemist">0</span>
+                    chemist</span
+                  >
+                </div>
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-full"></span>
+                    <span class="cc-stat-label">Full</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-pharma-full-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-pharma-full-chemist">0</span>
+                    chemist</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="category-collection-card inm-card">
+              <div class="cc-header">
+                <span class="cc-icon" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
+                    ></path>
+                    <path d="m8.5 8.5 7 7"></path>
+                  </svg>
+                </span>
+                <span class="cc-title">INM</span>
+              </div>
+              <div class="cc-total">
+                <span class="cc-total-value" id="compare-inm-total-amount"
+                  >0</span
+                >
+                <span class="cc-total-label"
+                  >Total Collection ·
+                  <b id="compare-inm-total-chemist">0</b> chemist</span
+                >
+              </div>
+              <div class="cc-progress">
+                <div class="cc-progress-fill" id="compare-inm-progress"></div>
+              </div>
+              <div class="cc-stats">
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-part"></span>
+                    <span class="cc-stat-label">Part</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-inm-part-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-inm-part-chemist">0</span> chemist</span
+                  >
+                </div>
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-full"></span>
+                    <span class="cc-stat-label">Full</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-inm-full-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-inm-full-chemist">0</span> chemist</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="category-collection-card isv-card">
+              <div class="cc-header">
+                <span class="cc-icon" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
+                    ></path>
+                    <path d="m8.5 8.5 7 7"></path>
+                  </svg>
+                </span>
+                <span class="cc-title">ISV</span>
+              </div>
+              <div class="cc-total">
+                <span class="cc-total-value" id="compare-isv-total-amount"
+                  >0</span
+                >
+                <span class="cc-total-label"
+                  >Total Collection ·
+                  <b id="compare-isv-total-chemist">0</b> chemist</span
+                >
+              </div>
+              <div class="cc-progress">
+                <div class="cc-progress-fill" id="compare-isv-progress"></div>
+              </div>
+              <div class="cc-stats">
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-part"></span>
+                    <span class="cc-stat-label">Part</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-isv-part-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-isv-part-chemist">0</span> chemist</span
+                  >
+                </div>
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-full"></span>
+                    <span class="cc-stat-label">Full</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-isv-full-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-isv-full-chemist">0</span> chemist</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="compare-controls"
+            id="compare-filter-row"
+            style="display: none; align-items: flex-end; gap: 15px"
+          >
+            <!-- Filter By -->
+            <div class="compare-field">
+              <label for="compare-filter-type">Filter By</label>
+              <select id="compare-filter-type" class="ds-date-alt">
+                <option value="all">All</option>
+                <option value="chemist">Chemist</option>
+                <option value="route">Route</option>
+                <option value="category">Category</option>
+              </select>
+            </div>
+
+            <!-- Route/Chemist Wrapper -->
+            <div
+              class="compare-field"
+              id="compare-filter-value-wrapper"
+              style="display: none"
+            >
+              <label id="compare-filter-value-label">Select</label>
+              <div class="autocomplete-wrapper" id="compare-value-wrapper">
+                <input
+                  type="text"
+                  id="compare-filter-value-input"
+                  class="ds-date-alt"
+                  placeholder="Select..."
+                  autocomplete="off"
+                />
+                <span
+                  class="autocomplete-clear"
+                  id="compare-filter-value-clear"
+                  title="Clear"
+                  >&times;</span
+                >
+                <div
+                  id="compare-filter-value-suggestions"
+                  class="autocomplete-suggestions"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Category Wrapper -->
+            <div
+              class="compare-field"
+              id="compare-filter-category-wrapper"
+              style="display: none"
+            >
+              <label id="compare-filter-category-label">Select Category</label>
+              <div class="autocomplete-wrapper" id="compare-category-wrapper">
+                <input
+                  type="text"
+                  id="compare-filter-category-input"
+                  class="ds-date-alt"
+                  placeholder="Select Category..."
+                  autocomplete="off"
+                />
+                <span
+                  class="autocomplete-clear"
+                  id="compare-filter-category-clear"
+                  title="Clear"
+                  >&times;</span
+                >
+                <div
+                  id="compare-filter-category-suggestions"
+                  class="autocomplete-suggestions"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Clear Button -->
+            <button
+              type="button"
+              id="compare-filter-clear-btn"
+              class="compare-run-btn"
+              style="background-color: #6c757d; margin-bottom: 0"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div class="compare-table-wrapper">
+            <table id="compare-table">
+              <thead>
+                <tr>
+                  <th>SL No</th>
+                  <th>Code</th>
+                  <th>CHEMIST NAME</th>
+                  <!-- এটি আগে ছিল -->
+                  <th>PAID STATUS</th>
+                  <!-- নতুন পজিশন: ডানে নিয়ে আসা হলো -->
+                  <th class="text-left">RUTE NAM</th>
+                  <th>CATEGORY</th>
+                  <th>PREVIOUS DUE</th>
+                  <th></th>
+                  <th>TOTAL COLLECTION</th>
+                </tr>
+              </thead>
+              <tbody id="compare-table-body">
+                <tr>
+                  <td colspan="9">
+                    <div
+                      style="text-align: center; padding: 20px; color: #6c757d"
+                    >
+                      No data available. Please select dates and click "Search".
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" style="text-align: right">TOTAL:</td>
+                  <td id="compare-foot-yesterday">0.00</td>
+                  <td id="compare-foot-today">0.00</td>
+                  <td id="compare-foot-collected">0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="user-info-footer">
       <div class="info-item">
         <span> Prepared By :</span>
@@ -1683,6 +2402,7 @@
         );
         let routeCategoryOptionsList = [];
         let routeCategoryActiveIndex = -1;
+
         const routeNameDisplay = document.getElementById("route-name-display");
         const printInfoRow = document.querySelector(".print-info-row");
         const pharmaTotalChemistSpan = document.getElementById(
@@ -2850,6 +3570,784 @@
             }
           });
         }
+
+        // ==================== Compare Dates ফিচার ====================
+        // দুইটা তারিখের DCC_UNPAID (তিন division মিলিয়ে) ডাটা টেনে এনে
+        // Chemist Code মিলিয়ে Yesterday Due - Today Due = Collected হিসাব করা হয়
+        const compareModalOverlay = document.getElementById(
+          "compare-modal-overlay",
+        );
+        const compareDatesBtn = document.getElementById("compare-dates-btn");
+        const compareModalCloseBtn = document.getElementById(
+          "compare-modal-close",
+        );
+        const compareRunBtn = document.getElementById("compare-run-btn");
+        const compareDate1Input = document.getElementById("compare-date-1");
+        const compareDate2Input = document.getElementById("compare-date-2");
+        const compareTableBody = document.getElementById("compare-table-body");
+        const compareSummaryBox = document.getElementById("compare-summary");
+        const compareTotalYesterdayDueEl = document.getElementById(
+          "compare-total-yesterday-due",
+        );
+        const compareTotalTodayDueEl = document.getElementById(
+          "compare-total-today-due",
+        );
+        const compareTotalCollectedEl = document.getElementById(
+          "compare-total-collected",
+        );
+        const compareTotalChemistEl = document.getElementById(
+          "compare-total-chemist",
+        );
+        const compareYesterdayDateLabel = document.getElementById(
+          "compare-yesterday-date-label",
+        );
+        const compareTodayDateLabel = document.getElementById(
+          "compare-today-date-label",
+        );
+        const compareCategoryCardsBox = document.getElementById(
+          "compare-category-cards",
+        );
+        // ক্যাটাগরি অনুযায়ী (PHARMA/INM/ISV) Part/Full/Total কালেকশন কার্ডের সব এলিমেন্ট রেফারেন্স
+        const compareCategoryCardEls = {
+          PHARMA: {
+            partAmount: document.getElementById("compare-pharma-part-amount"),
+            partChemist: document.getElementById("compare-pharma-part-chemist"),
+            fullAmount: document.getElementById("compare-pharma-full-amount"),
+            fullChemist: document.getElementById("compare-pharma-full-chemist"),
+            totalAmount: document.getElementById("compare-pharma-total-amount"),
+            totalChemist: document.getElementById(
+              "compare-pharma-total-chemist",
+            ),
+            progress: document.getElementById("compare-pharma-progress"),
+          },
+          INM: {
+            partAmount: document.getElementById("compare-inm-part-amount"),
+            partChemist: document.getElementById("compare-inm-part-chemist"),
+            fullAmount: document.getElementById("compare-inm-full-amount"),
+            fullChemist: document.getElementById("compare-inm-full-chemist"),
+            totalAmount: document.getElementById("compare-inm-total-amount"),
+            totalChemist: document.getElementById("compare-inm-total-chemist"),
+            progress: document.getElementById("compare-inm-progress"),
+          },
+          ISV: {
+            partAmount: document.getElementById("compare-isv-part-amount"),
+            partChemist: document.getElementById("compare-isv-part-chemist"),
+            fullAmount: document.getElementById("compare-isv-full-amount"),
+            fullChemist: document.getElementById("compare-isv-full-chemist"),
+            totalAmount: document.getElementById("compare-isv-total-amount"),
+            totalChemist: document.getElementById("compare-isv-total-chemist"),
+            progress: document.getElementById("compare-isv-progress"),
+          },
+        };
+        const compareFootYesterdayEl = document.getElementById(
+          "compare-foot-yesterday",
+        );
+        const compareFootTodayEl =
+          document.getElementById("compare-foot-today");
+        const compareFootCollectedEl = document.getElementById(
+          "compare-foot-collected",
+        );
+        const compareFilterRow = document.getElementById("compare-filter-row");
+        const compareFilterTypeSelect = document.getElementById(
+          "compare-filter-type",
+        );
+        const compareFilterValueWrapper = document.getElementById(
+          "compare-filter-value-wrapper",
+        );
+        const compareFilterValueLabel = document.getElementById(
+          "compare-filter-value-label",
+        );
+        const compareFilterValueInput = document.getElementById(
+          "compare-filter-value-input",
+        );
+        const compareFilterValueClearBtn = document.getElementById(
+          "compare-filter-value-clear",
+        );
+        const compareFilterValueSuggestionsBox = document.getElementById(
+          "compare-filter-value-suggestions",
+        );
+        const compareFilterClearBtn = document.getElementById(
+          "compare-filter-clear-btn",
+        );
+
+        // ---- Compare Dates মোডালেও Route এর পাশে আলাদা Select Category dropdown ----
+        const compareFilterCategoryWrapper = document.getElementById(
+          "compare-filter-category-wrapper",
+        );
+        const compareFilterCategoryInput = document.getElementById(
+          "compare-filter-category-input",
+        );
+        const compareFilterCategoryClearBtn = document.getElementById(
+          "compare-filter-category-clear",
+        );
+        const compareFilterCategorySuggestionsBox = document.getElementById(
+          "compare-filter-category-suggestions",
+        );
+        let compareCategoryOptionsList = [];
+        let compareCategoryActiveIndex = -1;
+
+        // Compare Dates রান করার পর মূল (unfiltered) রেজাল্ট এখানে রাখা হয়, যাতে ফিল্টার প্রয়োগ করা যায়
+        let lastCompareRows = [];
+        let compareFilterOptionsList = [];
+        let compareFilterActiveIndex = -1;
+
+        let compareDate1Picker = null;
+        let compareDate2Picker = null;
+
+        function initComparePickers() {
+          if (!compareDate1Picker) {
+            compareDate1Picker = flatpickr(compareDate1Input, {
+              dateFormat: "Y-m-d",
+              altInput: true,
+              altFormat: "d M, Y",
+              altInputClass: "ds-date-alt",
+              disableMobile: true,
+              defaultDate: new Date(Date.now() - 24 * 60 * 60 * 1000), // ডিফল্ট: গতকাল
+            });
+          }
+          if (!compareDate2Picker) {
+            compareDate2Picker = flatpickr(compareDate2Input, {
+              dateFormat: "Y-m-d",
+              altInput: true,
+              altFormat: "d M, Y",
+              altInputClass: "ds-date-alt",
+              disableMobile: true,
+              defaultDate: dsDateInput.value || "today", // ডিফল্ট: বর্তমানে সিলেক্ট করা তারিখ (আজ)
+            });
+          }
+        }
+
+        function parseAmountSafe(value) {
+          if (value === null || value === undefined) return 0;
+          const cleaned = String(value).replace(/,/g, "").trim();
+          const num = parseFloat(cleaned);
+          return isNaN(num) ? 0 : num;
+        }
+
+        function openCompareModal() {
+          initComparePickers();
+          compareModalOverlay.classList.add("open");
+        }
+
+        function closeCompareModal() {
+          compareModalOverlay.classList.remove("open");
+        }
+
+        if (compareDatesBtn)
+          compareDatesBtn.addEventListener("click", openCompareModal);
+        if (compareModalCloseBtn)
+          compareModalCloseBtn.addEventListener("click", closeCompareModal);
+        compareModalOverlay.addEventListener("click", (e) => {
+          if (e.target === compareModalOverlay) closeCompareModal();
+        });
+
+        // yyyy-mm-dd ফরম্যাটের তারিখকে সহজে পড়া যায় এমন ফরম্যাটে (dd Mmm, yyyy) দেখানোর জন্য
+        function formatCompareDateForLabel(dateValue) {
+          if (!dateValue) return "";
+          const parts = dateValue.split("-"); // yyyy-mm-dd
+          if (parts.length !== 3) return dateValue;
+          const [year, month, day] = parts;
+          const monthName = monthMapReverse[month] || month;
+          return `${day} ${monthName}, ${year}`;
+        }
+
+        async function runCompareDates() {
+          const date1 = compareDate1Input.value; // আগের তারিখ (yyyy-mm-dd)
+          const date2 = compareDate2Input.value; // পরের তারিখ (yyyy-mm-dd)
+
+          if (!date1 || !date2) {
+            alert("Please select both dates.");
+            return;
+          }
+
+          compareTableBody.innerHTML =
+            '<tr><td colspan="9">Loading data, please wait...</td></tr>';
+          compareSummaryBox.style.display = "none";
+
+          // কার্ডে সিলেক্ট করা তারিখ দুটো দেখানো (আগের বাকি / পরের বাকি লেবেলের সাথে)
+          if (compareYesterdayDateLabel)
+            compareYesterdayDateLabel.textContent = `${formatCompareDateForLabel(date1)}`;
+          if (compareTodayDateLabel)
+            compareTodayDateLabel.textContent = `${formatCompareDateForLabel(date2)}`;
+
+          try {
+            const [res1, res2] = await Promise.all([
+              fetchAllDivisionsData(date1),
+              fetchAllDivisionsData(date2),
+            ]);
+
+            // Chemist Code দিয়ে ম্যাপ বানানো (division আলাদা হলে code + division একসাথে key হিসেবে ব্যবহার করা ভালো)
+            const buildKey = (row) => `${row.division}__${row.code}`;
+
+            const map1 = {};
+            res1.rows.forEach((row) => {
+              map1[buildKey(row)] = row;
+            });
+            const map2 = {};
+            res2.rows.forEach((row) => {
+              map2[buildKey(row)] = row;
+            });
+
+            const allKeys = new Set([
+              ...Object.keys(map1),
+              ...Object.keys(map2),
+            ]);
+
+            const compareRows = [];
+            allKeys.forEach((key) => {
+              const y = map1[key]; // আগের তারিখের রেকর্ড
+              const t = map2[key]; // পরের তারিখের রেকর্ড
+              const base = t || y; // ডিসপ্লে ইনফোর জন্য (নাম, রুট ইত্যাদি) পরের তারিখেরটাই প্রাধান্য পাবে
+              const yesterdayDue = y ? parseAmountSafe(y.duesAmount) : 0;
+              const todayDue = t ? parseAmountSafe(t.duesAmount) : 0;
+              const collected = yesterdayDue - todayDue;
+
+              compareRows.push({
+                code: base.code,
+                chemistName: base.chemistName,
+                routeName: base.routeName,
+                category: base.category,
+                yesterdayDue,
+                todayDue,
+                collected,
+                inYesterdayOnly: !!y && !t,
+                inTodayOnly: !!t && !y,
+              });
+            });
+
+            // কালেকশন (পার্থক্য) বেশি থেকে কম অনুযায়ী সাজানো, যাদের কোনো পরিবর্তন নেই তারা নিচে
+            compareRows.sort((a, b) => b.collected - a.collected);
+
+            // শুধু তাদেরই দেখানো হবে যারা আসলে কালেকশন দিয়েছে (Yesterday Due থেকে Today Due কমেছে)
+            // পরিবর্তন নেই (0) বা নতুন বাকি বেড়েছে (নেগেটিভ) এমন চেমিস্ট বাদ যাবে
+            const collectedOnlyRows = compareRows.filter(
+              (row) => row.collected > 0,
+            );
+
+            lastCompareRows = collectedOnlyRows;
+            compareFilterRow.style.display =
+              collectedOnlyRows.length > 0 ? "flex" : "none";
+            // আগে থেকে কোনো Filter By (Chemist/Route/Category) সিলেক্ট করা থাকলে নতুন ডাটা অনুযায়ী অপশন লিস্ট রিফ্রেশ করা
+            if (compareFilterTypeSelect.value !== "all") {
+              populateCompareFilterOptions(compareFilterTypeSelect.value);
+            }
+            if (
+              compareFilterTypeSelect.value === "route" ||
+              compareFilterTypeSelect.value === "category"
+            ) {
+              populateCompareCategoryOptions();
+            }
+            applyCompareFilters();
+          } catch (err) {
+            console.error(err);
+            compareTableBody.innerHTML = `<tr><td colspan="9">Loading data failed: ${
+              err && err.message ? err.message : String(err)
+            }</td></tr>`;
+          }
+        }
+
+        // চেমিস্ট নাম, রুট — যেটা সিলেক্ট করা হয়েছে সেই ফিল্ড ও ভ্যালু অনুযায়ী lastCompareRows ফিল্টার করা
+        function getCompareFieldKey(type) {
+          if (type === "chemist") return "chemistName";
+          // Route ও Category — দুটো অপশনের জন্যই "Select Route" dropdown সবসময় routeName ধরে
+          if (type === "route" || type === "category") return "routeName";
+          return null;
+        }
+
+        // সিলেক্ট করা ফিল্ড অনুযায়ী lastCompareRows থেকে ইউনিক ভ্যালুর লিস্ট বানানো (ড্রপডাউনে দেখানোর জন্য)
+        function populateCompareFilterOptions(type) {
+          const fieldKey = getCompareFieldKey(type);
+          const uniqueValues = new Set();
+          if (fieldKey) {
+            lastCompareRows.forEach((row) => {
+              const val = (row[fieldKey] || "").toString().trim();
+              if (val) uniqueValues.add(val);
+            });
+          }
+          compareFilterOptionsList = Array.from(uniqueValues).sort();
+        }
+
+        // ---- Select Category dropdown এর অপশন লিস্ট — সবসময় PHARMA/INM/ISV ফিক্সড লিস্ট ----
+        function populateCompareCategoryOptions() {
+          const uniqueValues = new Set();
+          lastCompareRows.forEach((row) => {
+            const val = (row.category || "").toString().trim();
+            if (val) uniqueValues.add(val);
+          });
+          // ফিক্সড তিনটা ক্যাটাগরি সবসময় প্রথমে দেখানো হবে, তারপর ডাটায় থাকা অন্য কোনো মান (যদি থাকে)
+          const fixedCats = ["PHARMA", "INM", "ISV"];
+          const extra = Array.from(uniqueValues).filter(
+            (v) => !fixedCats.includes(v.toUpperCase()),
+          );
+          compareCategoryOptionsList = fixedCats.concat(extra.sort());
+        }
+
+        function renderCompareValueSuggestions(list) {
+          compareFilterActiveIndex = -1;
+          compareFilterValueSuggestionsBox.innerHTML = "";
+
+          const allItem = document.createElement("div");
+          allItem.textContent = "All";
+          allItem.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            compareFilterValueInput.value = "";
+            toggleCompareFilterValueClearBtn();
+            compareFilterValueSuggestionsBox.style.display = "none";
+            applyCompareFilters();
+          });
+          compareFilterValueSuggestionsBox.appendChild(allItem);
+
+          list.slice(0, 100).forEach((name) => {
+            const item = document.createElement("div");
+            item.textContent = name;
+            item.addEventListener("mousedown", (e) => {
+              e.preventDefault();
+              compareFilterValueInput.value = name;
+              toggleCompareFilterValueClearBtn();
+              compareFilterValueSuggestionsBox.style.display = "none";
+              applyCompareFilters();
+            });
+            compareFilterValueSuggestionsBox.appendChild(item);
+          });
+
+          compareFilterValueSuggestionsBox.style.display = "flex";
+        }
+
+        function showFilteredCompareValueSuggestions() {
+          const query = compareFilterValueInput.value.toLowerCase().trim();
+          const filtered =
+            query === ""
+              ? compareFilterOptionsList
+              : compareFilterOptionsList.filter((name) =>
+                  name.toLowerCase().includes(query),
+                );
+          renderCompareValueSuggestions(filtered);
+        }
+
+        function toggleCompareFilterValueClearBtn() {
+          compareFilterValueClearBtn.style.display =
+            compareFilterValueInput.value.trim() !== "" ? "block" : "none";
+        }
+
+        function updateCompareValueActiveItem(items) {
+          items.forEach((item) => item.classList.remove("active"));
+          if (items[compareFilterActiveIndex]) {
+            items[compareFilterActiveIndex].classList.add("active");
+            items[compareFilterActiveIndex].scrollIntoView({
+              block: "nearest",
+            });
+          }
+        }
+
+        // "Filter By" ড্রপডাউনে Chemist/Route/Category সিলেক্ট করলে পাশে সার্চযোগ্য ভ্যালু-ড্রপডাউন খুলবে
+        compareFilterTypeSelect.addEventListener("change", function () {
+          const type = this.value;
+          compareFilterValueInput.value = "";
+          toggleCompareFilterValueClearBtn();
+          compareFilterValueSuggestionsBox.style.display = "none";
+          compareFilterCategoryInput.value = "";
+          toggleCompareFilterCategoryClearBtn();
+          compareFilterCategorySuggestionsBox.style.display = "none";
+
+          if (type === "all") {
+            compareFilterValueWrapper.style.display = "none";
+            compareFilterCategoryWrapper.style.display = "none";
+          } else if (type === "chemist") {
+            // শুধু Chemist সিলেক্ট করলে একটাই dropdown (Select Chemist) দেখাবে
+            compareFilterValueLabel.textContent = "Select Chemist";
+            compareFilterValueInput.placeholder = "Select Chemist...";
+            compareFilterValueWrapper.style.display = "flex";
+            compareFilterCategoryWrapper.style.display = "none";
+            populateCompareFilterOptions(type);
+          } else {
+            // Route বা Category — যেটাই সিলেক্ট করা হোক, দুইটা dropdown-ই একসাথে দেখাবে:
+            // Select Route (routeName অনুযায়ী) এবং Select Category (PHARMA/INM/ISV অনুযায়ী)
+            compareFilterValueLabel.textContent = "Select Route";
+            compareFilterValueInput.placeholder = "Select Route...";
+            compareFilterValueWrapper.style.display = "flex";
+            compareFilterCategoryWrapper.style.display = "flex";
+            populateCompareFilterOptions(type);
+            populateCompareCategoryOptions();
+          }
+          applyCompareFilters();
+        });
+
+        compareFilterValueInput.addEventListener("input", function () {
+          showFilteredCompareValueSuggestions();
+          toggleCompareFilterValueClearBtn();
+          applyCompareFilters();
+        });
+        compareFilterValueInput.addEventListener("focus", function () {
+          this.select();
+          showFilteredCompareValueSuggestions();
+        });
+        compareFilterValueInput.addEventListener(
+          "click",
+          showFilteredCompareValueSuggestions,
+        );
+        compareFilterValueInput.addEventListener("keydown", function (e) {
+          const items =
+            compareFilterValueSuggestionsBox.querySelectorAll("div");
+          if (
+            items.length === 0 ||
+            compareFilterValueSuggestionsBox.style.display === "none"
+          )
+            return;
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            compareFilterActiveIndex =
+              (compareFilterActiveIndex + 1) % items.length;
+            updateCompareValueActiveItem(items);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            compareFilterActiveIndex =
+              (compareFilterActiveIndex - 1 + items.length) % items.length;
+            updateCompareValueActiveItem(items);
+          } else if (e.key === "Enter") {
+            if (
+              compareFilterActiveIndex >= 0 &&
+              items[compareFilterActiveIndex]
+            ) {
+              e.preventDefault();
+              const text = items[compareFilterActiveIndex].textContent;
+              compareFilterValueInput.value = text === "All" ? "" : text;
+              toggleCompareFilterValueClearBtn();
+              compareFilterValueSuggestionsBox.style.display = "none";
+              compareFilterActiveIndex = -1;
+              applyCompareFilters();
+            }
+          } else if (e.key === "Escape") {
+            compareFilterValueSuggestionsBox.style.display = "none";
+            compareFilterActiveIndex = -1;
+          }
+        });
+        compareFilterValueClearBtn.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          compareFilterValueInput.value = "";
+          toggleCompareFilterValueClearBtn();
+          compareFilterValueSuggestionsBox.style.display = "none";
+          applyCompareFilters();
+          compareFilterValueInput.focus();
+        });
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest("#compare-value-wrapper")) {
+            compareFilterValueSuggestionsBox.style.display = "none";
+          }
+        });
+
+        // ---- Select Category dropdown এর সার্চযোগ্য অটোকমপ্লিট (Compare Dates মোডাল) ----
+        function renderCompareCategorySuggestions(list) {
+          compareCategoryActiveIndex = -1;
+          compareFilterCategorySuggestionsBox.innerHTML = "";
+
+          const allItem = document.createElement("div");
+          allItem.textContent = "All";
+          allItem.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            compareFilterCategoryInput.value = "";
+            toggleCompareFilterCategoryClearBtn();
+            compareFilterCategorySuggestionsBox.style.display = "none";
+            applyCompareFilters();
+          });
+          compareFilterCategorySuggestionsBox.appendChild(allItem);
+
+          list.slice(0, 100).forEach((name) => {
+            const item = document.createElement("div");
+            item.textContent = name;
+            item.addEventListener("mousedown", (e) => {
+              e.preventDefault();
+              compareFilterCategoryInput.value = name;
+              toggleCompareFilterCategoryClearBtn();
+              compareFilterCategorySuggestionsBox.style.display = "none";
+              applyCompareFilters();
+            });
+            compareFilterCategorySuggestionsBox.appendChild(item);
+          });
+
+          compareFilterCategorySuggestionsBox.style.display = "flex";
+        }
+
+        function showFilteredCompareCategorySuggestions() {
+          const query = compareFilterCategoryInput.value.toLowerCase().trim();
+          const filtered =
+            query === ""
+              ? compareCategoryOptionsList
+              : compareCategoryOptionsList.filter((name) =>
+                  name.toLowerCase().includes(query),
+                );
+          renderCompareCategorySuggestions(filtered);
+        }
+
+        function toggleCompareFilterCategoryClearBtn() {
+          compareFilterCategoryClearBtn.style.display =
+            compareFilterCategoryInput.value.trim() !== "" ? "block" : "none";
+        }
+
+        function updateCompareCategoryActiveItem(items) {
+          items.forEach((item) => item.classList.remove("active"));
+          if (items[compareCategoryActiveIndex]) {
+            items[compareCategoryActiveIndex].classList.add("active");
+            items[compareCategoryActiveIndex].scrollIntoView({
+              block: "nearest",
+            });
+          }
+        }
+
+        compareFilterCategoryInput.addEventListener("input", function () {
+          showFilteredCompareCategorySuggestions();
+          toggleCompareFilterCategoryClearBtn();
+          applyCompareFilters();
+        });
+        compareFilterCategoryInput.addEventListener("focus", function () {
+          this.select();
+          showFilteredCompareCategorySuggestions();
+        });
+        compareFilterCategoryInput.addEventListener(
+          "click",
+          showFilteredCompareCategorySuggestions,
+        );
+        compareFilterCategoryInput.addEventListener("keydown", function (e) {
+          const items =
+            compareFilterCategorySuggestionsBox.querySelectorAll("div");
+          if (
+            items.length === 0 ||
+            compareFilterCategorySuggestionsBox.style.display === "none"
+          )
+            return;
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            compareCategoryActiveIndex =
+              (compareCategoryActiveIndex + 1) % items.length;
+            updateCompareCategoryActiveItem(items);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            compareCategoryActiveIndex =
+              (compareCategoryActiveIndex - 1 + items.length) % items.length;
+            updateCompareCategoryActiveItem(items);
+          } else if (e.key === "Enter") {
+            if (
+              compareCategoryActiveIndex >= 0 &&
+              items[compareCategoryActiveIndex]
+            ) {
+              e.preventDefault();
+              const text = items[compareCategoryActiveIndex].textContent;
+              compareFilterCategoryInput.value = text === "All" ? "" : text;
+              toggleCompareFilterCategoryClearBtn();
+              compareFilterCategorySuggestionsBox.style.display = "none";
+              compareCategoryActiveIndex = -1;
+              applyCompareFilters();
+            }
+          } else if (e.key === "Escape") {
+            compareFilterCategorySuggestionsBox.style.display = "none";
+            compareCategoryActiveIndex = -1;
+          }
+        });
+        compareFilterCategoryClearBtn.addEventListener(
+          "mousedown",
+          function (e) {
+            e.preventDefault();
+            compareFilterCategoryInput.value = "";
+            toggleCompareFilterCategoryClearBtn();
+            compareFilterCategorySuggestionsBox.style.display = "none";
+            applyCompareFilters();
+            compareFilterCategoryInput.focus();
+          },
+        );
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest("#compare-category-wrapper")) {
+            compareFilterCategorySuggestionsBox.style.display = "none";
+          }
+        });
+
+        function applyCompareFilters() {
+          const type = compareFilterTypeSelect.value;
+
+          const filtered = lastCompareRows.filter((row) => {
+            if (type === "all") return true;
+
+            if (type === "chemist") {
+              const query = compareFilterValueInput.value.toLowerCase().trim();
+              if (query === "") return true;
+              return (row.chemistName || "").toLowerCase().includes(query);
+            }
+
+            // Route বা Category — Select Route ও Select Category দুইটা dropdown-ই
+            // একসাথে AND লজিকে ফিল্টার করে; খালি থাকলে সেটা "All" হিসেবে গণ্য হয়
+            const routeQuery = compareFilterValueInput.value
+              .toLowerCase()
+              .trim();
+            const categoryQuery = compareFilterCategoryInput.value
+              .toLowerCase()
+              .trim();
+            const matchesRoute =
+              routeQuery === "" ||
+              (row.routeName || "").toLowerCase().includes(routeQuery);
+            const matchesCategory =
+              categoryQuery === "" ||
+              (row.category || "").toLowerCase().includes(categoryQuery);
+            return matchesRoute && matchesCategory;
+          });
+
+          renderCompareTable(filtered);
+        }
+
+        if (compareFilterClearBtn) {
+          compareFilterClearBtn.addEventListener("click", () => {
+            compareFilterTypeSelect.value = "all";
+            compareFilterValueInput.value = "";
+            toggleCompareFilterValueClearBtn();
+            compareFilterValueWrapper.style.display = "none";
+            compareFilterValueSuggestionsBox.style.display = "none";
+            compareFilterCategoryInput.value = "";
+            toggleCompareFilterCategoryClearBtn();
+            compareFilterCategoryWrapper.style.display = "none";
+            compareFilterCategorySuggestionsBox.style.display = "none";
+            applyCompareFilters();
+          });
+        }
+
+        // ক্যাটাগরি কার্ডের অ্যামাউন্ট বড় সংখ্যার জন্য কমা-সহ সুন্দর ফরম্যাটে (যেমন 12,450) দেখানোর জন্য
+        function formatCategoryCardAmount(value) {
+          const rounded = Math.round(value || 0);
+          return rounded.toLocaleString("en-IN");
+        }
+
+        function renderCompareTable(rows) {
+          if (!rows || rows.length === 0) {
+            compareTableBody.innerHTML =
+              '<tr><td colspan="9">কোনো ডাটা পাওয়া যায়নি।</td></tr>';
+            compareSummaryBox.style.display = "none";
+            compareCategoryCardsBox.style.display = "none";
+            return;
+          }
+
+          let totalYesterdayDue = 0;
+          let totalTodayDue = 0;
+          let totalCollected = 0;
+
+          // প্রতিটা ক্যাটাগরির জন্য Part/Full কালেকশনের অ্যামাউন্ট ও চেমিস্ট সংখ্যা আলাদাভাবে গণনা করা হচ্ছে
+          const categoryStats = {
+            PHARMA: {
+              part: { count: 0, amount: 0 },
+              full: { count: 0, amount: 0 },
+            },
+            INM: {
+              part: { count: 0, amount: 0 },
+              full: { count: 0, amount: 0 },
+            },
+            ISV: {
+              part: { count: 0, amount: 0 },
+              full: { count: 0, amount: 0 },
+            },
+          };
+
+          function getCategoryKey(catRaw) {
+            const cat = (catRaw || "").toUpperCase();
+            if (cat.includes("PHARMA")) return "PHARMA";
+            if (cat.includes("ISV")) return "ISV";
+            if (cat.includes("INM")) return "INM";
+            return null;
+          }
+
+          // renderCompareTable ফাংশনের ভেতরের অংশটি এভাবে আপডেট করুন:
+
+          const rowsHtml = rows
+            .map((r, index) => {
+              totalYesterdayDue += r.yesterdayDue;
+              totalTodayDue += r.todayDue;
+              totalCollected += r.collected;
+
+              const collectedClass =
+                r.collected > 0
+                  ? "positive"
+                  : r.collected < 0
+                    ? "negative"
+                    : "";
+
+              // PAID STATUS লজিক
+              const isFullPaid = r.todayDue === 0;
+              const paidStatusHtml = isFullPaid
+                ? '<span style="color:#28a745; font-weight:bold;">Full</span>'
+                : '<span style="color:#c9793a; font-weight:bold;">Part</span>';
+
+              const catKey = getCategoryKey(r.category);
+              if (catKey) {
+                const bucket = isFullPaid
+                  ? categoryStats[catKey].full
+                  : categoryStats[catKey].part;
+                bucket.count++;
+                bucket.amount += r.collected;
+              }
+
+              // টেবিল রো এর ক্রম পরিবর্তন করা হয়েছে:
+              return `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${r.code || ""}</td>
+        <td class="text-left">${r.chemistName || ""}</td> <!-- Chemist Name -->
+        <td>${paidStatusHtml}</td>                       <!-- Paid Status (ডানে সরানো হলো) -->
+        <td class="text-left">${r.routeName || ""}</td>
+        <td>${r.category || ""}</td>
+        <td>${r.yesterdayDue.toFixed(2)}</td>
+        <td>${r.todayDue.toFixed(2)}</td>
+        <td class="${collectedClass}">${r.collected.toFixed(2)}</td>
+      </tr>
+    `;
+            })
+            .join("");
+
+          compareTableBody.innerHTML = rowsHtml;
+
+          compareFootYesterdayEl.textContent = totalYesterdayDue.toFixed(2);
+          compareFootTodayEl.textContent = totalTodayDue.toFixed(2);
+          compareFootCollectedEl.textContent = totalCollected.toFixed(2);
+
+          compareTotalYesterdayDueEl.textContent = totalYesterdayDue.toFixed(2);
+          compareTotalTodayDueEl.textContent = totalTodayDue.toFixed(2);
+          compareTotalCollectedEl.textContent = totalCollected.toFixed(2);
+          compareTotalChemistEl.textContent = rows.length;
+
+          // প্রতিটা ক্যাটাগরির কার্ডে Part/Full/Total কালেকশন, চেমিস্ট সংখ্যা ও প্রোগ্রেস বার আপডেট করা
+          ["PHARMA", "INM", "ISV"].forEach((catKey) => {
+            const els = compareCategoryCardEls[catKey];
+            if (!els) return;
+            const stat = categoryStats[catKey];
+            const totalCount = stat.part.count + stat.full.count;
+            const totalAmount = stat.part.amount + stat.full.amount;
+
+            if (els.partAmount)
+              els.partAmount.textContent = formatCategoryCardAmount(
+                stat.part.amount,
+              );
+            if (els.partChemist) els.partChemist.textContent = stat.part.count;
+            if (els.fullAmount)
+              els.fullAmount.textContent = formatCategoryCardAmount(
+                stat.full.amount,
+              );
+            if (els.fullChemist) els.fullChemist.textContent = stat.full.count;
+            if (els.totalAmount)
+              els.totalAmount.textContent =
+                formatCategoryCardAmount(totalAmount);
+            if (els.totalChemist) els.totalChemist.textContent = totalCount;
+
+            // প্রোগ্রেস বার: মোট কালেকশনের মধ্যে Full কালেকশনের শতকরা হার দেখানো হচ্ছে
+            if (els.progress) {
+              const fullPct =
+                totalAmount > 0
+                  ? Math.min(100, (stat.full.amount / totalAmount) * 100)
+                  : 0;
+              els.progress.style.width = fullPct.toFixed(1) + "%";
+            }
+          });
+          compareCategoryCardsBox.style.display = "flex";
+
+          compareSummaryBox.style.display = "flex";
+        }
+
+        if (compareRunBtn)
+          compareRunBtn.addEventListener("click", runCompareDates);
 
         // পেজ প্রথম লোডে ডিফল্ট Division + আজকের Date দিয়ে অটো-লোড
         loadDataFromFirestore();
