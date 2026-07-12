@@ -1262,6 +1262,46 @@
       .compare-run-btn:hover {
         opacity: 0.85;
       }
+      .compare-download-csv-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: linear-gradient(135deg, #1fae5e 0%, #0f8a45 100%);
+        color: #fff;
+        border: none;
+        padding: 0 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        line-height: 1;
+        height: 38px;
+        font-size: 13px;
+        letter-spacing: 0.2px;
+        box-shadow:
+          0 2px 5px rgba(15, 138, 69, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          filter 0.15s ease;
+      }
+      .compare-download-csv-btn svg {
+        flex-shrink: 0;
+      }
+      .compare-download-csv-btn:hover {
+        filter: brightness(1.08);
+        box-shadow:
+          0 4px 10px rgba(15, 138, 69, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+      .compare-download-csv-btn:active {
+        transform: translateY(0);
+        filter: brightness(0.96);
+        box-shadow:
+          0 2px 4px rgba(15, 138, 69, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
       .compare-summary {
         display: flex;
         gap: 8px;
@@ -2036,6 +2076,7 @@
                 <option value="chemist">Chemist</option>
                 <option value="route">Route</option>
                 <option value="category">Category</option>
+                <option value="status">Status</option>
               </select>
             </div>
 
@@ -2103,6 +2144,29 @@
               style="background-color: #6c757d; margin-bottom: 0"
             >
               Clear
+            </button>
+
+            <!-- Download CSV Button -->
+            <button
+              type="button"
+              id="compare-download-csv-btn"
+              class="compare-download-csv-btn"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 3v12" />
+                <path d="M7 10l5 5 5-5" />
+                <path d="M4 19h16" />
+              </svg>
+              Download CSV
             </button>
           </div>
 
@@ -3669,6 +3733,9 @@
         const compareFilterClearBtn = document.getElementById(
           "compare-filter-clear-btn",
         );
+        const compareDownloadCsvBtn = document.getElementById(
+          "compare-download-csv-btn",
+        );
 
         // ---- Compare Dates মোডালেও Route এর পাশে আলাদা Select Category dropdown ----
         const compareFilterCategoryWrapper = document.getElementById(
@@ -3688,6 +3755,7 @@
 
         // Compare Dates রান করার পর মূল (unfiltered) রেজাল্ট এখানে রাখা হয়, যাতে ফিল্টার প্রয়োগ করা যায়
         let lastCompareRows = [];
+        let lastCompareRenderedRows = [];
         let compareFilterOptionsList = [];
         let compareFilterActiveIndex = -1;
 
@@ -3806,6 +3874,7 @@
                 code: base.code,
                 chemistName: base.chemistName,
                 routeName: base.routeName,
+                territory: base.territory,
                 category: base.category,
                 yesterdayDue,
                 todayDue,
@@ -3880,6 +3949,11 @@
             (v) => !fixedCats.includes(v.toUpperCase()),
           );
           compareCategoryOptionsList = fixedCats.concat(extra.sort());
+        }
+
+        // ---- Select Status dropdown এর অপশন লিস্ট — সবসময় Full/Part ফিক্সড লিস্ট ----
+        function populateCompareStatusOptions() {
+          compareFilterOptionsList = ["Full", "Part"];
         }
 
         function renderCompareValueSuggestions(list) {
@@ -3959,6 +4033,13 @@
             compareFilterValueWrapper.style.display = "flex";
             compareFilterCategoryWrapper.style.display = "none";
             populateCompareFilterOptions(type);
+          } else if (type === "status") {
+            // Status সিলেক্ট করলে Full/Part এর জন্য একটাই dropdown (Select Status) দেখাবে
+            compareFilterValueLabel.textContent = "Select Status";
+            compareFilterValueInput.placeholder = "Select Status...";
+            compareFilterValueWrapper.style.display = "flex";
+            compareFilterCategoryWrapper.style.display = "none";
+            populateCompareStatusOptions();
           } else {
             // Route বা Category — যেটাই সিলেক্ট করা হোক, দুইটা dropdown-ই একসাথে দেখাবে:
             // Select Route (routeName অনুযায়ী) এবং Select Category (PHARMA/INM/ISV অনুযায়ী)
@@ -4173,6 +4254,13 @@
               return (row.chemistName || "").toLowerCase().includes(query);
             }
 
+            if (type === "status") {
+              const query = compareFilterValueInput.value.toLowerCase().trim();
+              if (query === "") return true;
+              const rowStatus = row.todayDue === 0 ? "full" : "part";
+              return rowStatus === query;
+            }
+
             // Route বা Category — Select Route ও Select Category দুইটা dropdown-ই
             // একসাথে AND লজিকে ফিল্টার করে; খালি থাকলে সেটা "All" হিসেবে গণ্য হয়
             const routeQuery = compareFilterValueInput.value
@@ -4208,6 +4296,111 @@
           });
         }
 
+        // ---- Compare টেবিলের বর্তমানে ফিল্টার হওয়া ডাটা CSV আকারে ডাউনলোড করার ফাংশন ----
+        function escapeCsvValue(value) {
+          const str = value === null || value === undefined ? "" : String(value);
+          if (/[",\n\r]/.test(str)) {
+            return '"' + str.replace(/"/g, '""') + '"';
+          }
+          return str;
+        }
+
+        function downloadCompareCsv() {
+          const rows = lastCompareRenderedRows;
+          if (!rows || rows.length === 0) {
+            alert("ডাউনলোড করার জন্য কোনো ডাটা নেই। আগে সার্চ করে ডাটা লোড করুন।");
+            return;
+          }
+
+          const headers = [
+            "SL No",
+            "Code",
+            "Chemist Name",
+            "Paid Status",
+            "Route Name",
+            "Territory",
+            "Category",
+            "Previous Due",
+            "Today Due",
+            "Total Collection",
+          ];
+
+          const csvLines = [headers.map(escapeCsvValue).join(",")];
+
+          let totalYesterdayDue = 0;
+          let totalTodayDue = 0;
+          let totalCollected = 0;
+
+          rows.forEach((r, index) => {
+            totalYesterdayDue += r.yesterdayDue;
+            totalTodayDue += r.todayDue;
+            totalCollected += r.collected;
+
+            const paidStatus = r.todayDue === 0 ? "Full" : "Part";
+
+            const line = [
+              index + 1,
+              r.code || "",
+              r.chemistName || "",
+              paidStatus,
+              r.routeName || "",
+              r.territory || "",
+              r.category || "",
+              r.yesterdayDue.toFixed(2),
+              r.todayDue.toFixed(2),
+              r.collected.toFixed(2),
+            ]
+              .map(escapeCsvValue)
+              .join(",");
+            csvLines.push(line);
+          });
+
+          csvLines.push(
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "TOTAL",
+              totalYesterdayDue.toFixed(2),
+              totalTodayDue.toFixed(2),
+              totalCollected.toFixed(2),
+            ]
+              .map(escapeCsvValue)
+              .join(","),
+          );
+
+          // Excel-এ বাংলা টেক্সট সঠিকভাবে দেখানোর জন্য UTF-8 BOM যোগ করা হচ্ছে
+          const csvContent = "\uFEFF" + csvLines.join("\r\n");
+          const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+          });
+
+          const fromLabel = compareDate1Input?.value
+            ? compareDate1Input.value.replace(/[^\d]/g, "-")
+            : "from";
+          const toLabel = compareDate2Input?.value
+            ? compareDate2Input.value.replace(/[^\d]/g, "-")
+            : "to";
+          const fileName = `Paid Chemis_${fromLabel}_to_${toLabel}.csv`;
+
+          const link = document.createElement("a");
+          const url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", fileName);
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+
+        if (compareDownloadCsvBtn) {
+          compareDownloadCsvBtn.addEventListener("click", downloadCompareCsv);
+        }
+
         // ক্যাটাগরি কার্ডের অ্যামাউন্ট বড় সংখ্যার জন্য কমা-সহ সুন্দর ফরম্যাটে (যেমন 12,450) দেখানোর জন্য
         function formatCategoryCardAmount(value) {
           const rounded = Math.round(value || 0);
@@ -4215,6 +4408,8 @@
         }
 
         function renderCompareTable(rows) {
+          lastCompareRenderedRows = rows || [];
+
           if (!rows || rows.length === 0) {
             compareTableBody.innerHTML =
               '<tr><td colspan="9">কোনো ডাটা পাওয়া যায়নি।</td></tr>';
