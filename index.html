@@ -11,6 +11,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Route Wise Unpaid</title>
     <link
+      rel="icon"
+      type="image/png"
+      href="https://images.seeklogo.com/logo-png/53/1/ibn-sina-medical-logo-png_seeklogo-536126.png"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
       rel="stylesheet"
     />
@@ -442,7 +447,7 @@
 
       /* ---- ইনপুটে টাইপ করলে দেখা যাবে এমন Clear (X) বাটন ---- */
       .autocomplete-clear {
-        display: none !important;
+        display: none;
         position: absolute;
         top: 50%;
         right: 10px;
@@ -465,7 +470,28 @@
         background-color: #dc3545;
       }
 
-      #dr-suggestions,
+      #dr-suggestions {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        width: max-content;
+        min-width: 260px;
+        max-width: 420px;
+        background-color: #f0f2f5;
+        border: none;
+        border-radius: 8px;
+        max-height: 380px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+        box-sizing: border-box;
+        padding: 8px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+
       .autocomplete-suggestions {
         display: none;
         position: absolute;
@@ -550,6 +576,22 @@
 
       .page-buttons .print {
         background-color: #17a2b8;
+      }
+
+      /* Print বাটনটি DR সিলেক্ট করার পর print-info-row এ সরে গেলেও যেন একই লুক থাকে */
+      button.print {
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      button.print:hover {
+        opacity: 0.8;
       }
 
       .marquee-container {
@@ -787,6 +829,11 @@
         width: auto;
         padding-right: 30px; /* Clear (X) বাটনের জন্য জায়গা */
         box-sizing: border-box;
+        border-bottom: none; /* স্ক্রিনে নিচের বর্ডার লাইন বাদ */
+      }
+
+      #schedule-date-input {
+        border-bottom: none; /* স্ক্রিনে নিচের বর্ডার লাইন বাদ */
       }
 
       td .chemist-info {
@@ -955,7 +1002,8 @@
         .sticky-header-wrapper,
         .header-totals-row,
         .toolbar-row,
-        #loading-overlay {
+        #loading-overlay,
+        button.print {
           display: none !important;
         }
         .user-info-footer {
@@ -1251,13 +1299,17 @@
         background-color: #28a745;
         color: #fff;
         border: none;
-        padding: 6px 14px;
-        border-radius: 4px;
+        padding: 0 16px;
+        border-radius: 8px;
         cursor: pointer;
-        font-weight: bold;
+        font-weight: 700;
         line-height: 1;
-        height: 36px;
+        height: 38px;
         font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
       }
       .compare-run-btn:hover {
         opacity: 0.85;
@@ -1630,7 +1682,7 @@
 
         <!-- একটাই টুলবার লাইনে: Date (কাস্টম পিকার), Search By, Print/Preview/Save, Prev/Page/Next -->
         <div class="toolbar-row">
-          <div class="toolbar-item">
+          <div class="toolbar-item" id="date-toolbar-item">
             <label for="ds-date">Date:</label>
             <div class="date-picker-field">
               <svg
@@ -1743,7 +1795,7 @@
             <div id="dr-suggestions" class="dr-suggestions"></div>
           </div>
         </div>
-        <div class="info-item">
+        <div class="info-item" id="schedule-date-info-item">
           <span>SCHEDULE DATE :</span>
           <input
             type="text"
@@ -2166,7 +2218,7 @@
                 <path d="M7 10l5 5 5-5" />
                 <path d="M4 19h16" />
               </svg>
-              Download CSV
+              Download 
             </button>
           </div>
 
@@ -3110,11 +3162,17 @@
           prevPageBtn.disabled = currentPage === 1;
           nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
         }
+        const dateToolbarItem = document.getElementById("date-toolbar-item");
         searchBySelect.addEventListener("change", (event) => {
           const selectedValue = event.target.value;
           textFilterInput.style.display = "none";
           routeCategoryFilterWrapper.style.display = "none";
           routeCategorySuggestionsBox.style.display = "none";
+          // All ছাড়া অন্য যেকোনো (Route/Category/Sl/Chemist) সিলেক্ট করলে Date ইনপুট লুকিয়ে যাবে
+          if (dateToolbarItem) {
+            dateToolbarItem.style.display =
+              selectedValue === "all" ? "" : "none";
+          }
           if (selectedValue === "sl" || selectedValue === "chemist") {
             textFilterInput.style.display = "";
           } else if (
@@ -3199,12 +3257,17 @@
         // ---- Preview: সার্ভার ছাড়াই ক্লায়েন্ট-সাইডে নতুন ট্যাবে প্রিন্ট-প্রিভিউ ----
         previewBtn.addEventListener("click", () => {
           addPageTotalsForPrint();
+          // Print বাটনটি এখন print-info-row এর ভিতরে থাকতে পারে (DR সিলেক্ট থাকলে),
+          // প্রিভিউতে যেন এই বাটনটি না দেখায় তাই সাময়িকভাবে লুকানো হচ্ছে
+          const printBtnPrevDisplay = printBtn ? printBtn.style.display : "";
+          if (printBtn) printBtn.style.display = "none";
           const printHead = document.head.innerHTML;
           const printBody =
             document.querySelector(".print-main-header").outerHTML +
             document.querySelector(".print-info-row").outerHTML +
             document.querySelector(".table-wrapper").outerHTML +
             document.querySelector(".user-info-footer").outerHTML;
+          if (printBtn) printBtn.style.display = printBtnPrevDisplay;
 
           const previewWindow = window.open("", "_blank");
           if (!previewWindow) {
@@ -3524,6 +3587,33 @@
           }
         });
 
+        // ---- DR সিলেক্ট করা থাকলে Print বাটনটি SCHEDULE DATE এর ঠিক বামে দেখানোর জন্য ----
+        const pageButtonsContainer = document.querySelector(".page-buttons");
+        const scheduleDateInfoItem = document.getElementById(
+          "schedule-date-info-item",
+        );
+        const printBtnOriginalNextSibling = previewBtn; // মূল অবস্থানে ফিরিয়ে আনার জন্য রেফারেন্স
+
+        function updatePrintBtnPosition() {
+          if (!printBtn || !scheduleDateInfoItem || !printInfoRow) return;
+          const drSelected = drNameInput && drNameInput.value.trim() !== "";
+          if (drSelected) {
+            if (printBtn.parentElement !== printInfoRow) {
+              printInfoRow.insertBefore(printBtn, scheduleDateInfoItem);
+            }
+          } else {
+            if (
+              pageButtonsContainer &&
+              printBtn.parentElement !== pageButtonsContainer
+            ) {
+              pageButtonsContainer.insertBefore(
+                printBtn,
+                printBtnOriginalNextSibling || pageButtonsContainer.firstChild,
+              );
+            }
+          }
+        }
+
         // ---- কাস্টম DR সাজেশন ----
         let drListData = [];
         let drActiveIndex = -1;
@@ -3535,6 +3625,7 @@
             drNameClearBtn.style.display =
               drNameInput.value.trim() !== "" ? "block" : "none";
           }
+          updatePrintBtnPosition();
         }
 
         function renderDrSuggestions(list) {
@@ -4378,13 +4469,7 @@
             type: "text/csv;charset=utf-8;",
           });
 
-          const fromLabel = compareDate1Input?.value
-            ? compareDate1Input.value.replace(/[^\d]/g, "-")
-            : "from";
-          const toLabel = compareDate2Input?.value
-            ? compareDate2Input.value.replace(/[^\d]/g, "-")
-            : "to";
-          const fileName = `Paid Chemis_${fromLabel}_to_${toLabel}.csv`;
+          const fileName = "Compare_Report.csv";
 
           const link = document.createElement("a");
           const url = URL.createObjectURL(blob);
