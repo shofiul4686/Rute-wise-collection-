@@ -2409,23 +2409,26 @@
         }
 
         // ---- DR লিস্ট (IPI NO + NAME একসাথে) ----
-        // আপলোডার টুল Employee List "DR" ক্যাটেগরির ডাটা সেভ করে Employee_List/DR পাথে
-        // (division অনুযায়ী আলাদা করা হয় না)। প্রতিটা এন্ট্রি একটা object যাতে IPI NO ও NAME ফিল্ড থাকে।
-        // এই পাথে 'category' ও 'total_records' নামে দুইটা মেটাডাটা key-ও একই লেভেলে থাকে,
-        // সেগুলো object না হওয়ায় (বা NAME না থাকায়) এড়িয়ে যাওয়া হয়।
-        // ড্রপডাউনে দেখানো হবে "IPI NO - NAME" ফরম্যাটে।
+        // আসল RTDB পাথ: DINAJPUR/Employee_List/DR_List
+        // এখানে প্রতিটা এন্ট্রি object আকারে না থেকে সরাসরি key হিসেবে থাকে,
+        // যেমন: "IPI-000496_MD-SHAHMIM HOSSEN"
+        // key-টাকে প্রথম "_" এ ভেঙে "IPI-000496 - MD-SHAHMIM HOSSEN" ফরম্যাটে দেখানো হয়।
         async function fetchDrListFromRTDB() {
           try {
-            const snap = await rtdb.ref(`Employee_List/DR`).once("value");
+            const snap = await rtdb
+              .ref(`DINAJPUR/Employee_List/DR_List`)
+              .once("value");
             const combined = new Set();
             if (snap.exists()) {
               snap.forEach((child) => {
-                const val = child.val();
-                if (val && typeof val === "object" && val["NAME"]) {
-                  const ipi = String(val["IPI NO"] || "").trim();
-                  const name = String(val["NAME"]).trim();
-                  combined.add(ipi ? `${ipi} - ${name}` : name);
-                }
+                const key = String(child.key || "").trim();
+                if (!key) return;
+                const idx = key.indexOf("_");
+                const display =
+                  idx > -1
+                    ? `${key.slice(0, idx)} - ${key.slice(idx + 1)}`
+                    : key;
+                combined.add(display);
               });
             }
             return Array.from(combined).sort((a, b) => a.localeCompare(b));
