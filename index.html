@@ -497,9 +497,9 @@
         position: absolute;
         top: calc(100% + 4px);
         left: 0;
+        width: max-content;
         min-width: 100%;
-        width: 100%;
-        max-width: 100%;
+        max-width: 320px;
         background-color: #f0f2f5;
         border: none;
         border-radius: 8px;
@@ -1184,11 +1184,12 @@
         @page {
           size: landscape;
           margin-top: 1cm; /* মেইন হেডার এর জন্য জায়গা */
-          margin-bottom: 1cm; /* পেজ নাম্বার এর জন্য জায়গা */
+          margin-bottom: 1.8cm; /* পেজ নাম্বার এর জন্য বেশি জায়গা রাখা হলো, যাতে কেটে না যায় */
           @bottom-center {
             content: "Page " counter(page) " of " counter(pages);
             font-size: 10pt;
             color: #555;
+            margin-bottom: 0.5cm; /* পেজ নাম্বারকে পেজের একদম নিচের কিনারা থেকে আরেকটু উপরে তোলা হলো */
           }
         }
 
@@ -1265,6 +1266,15 @@
         overflow-y: auto;
         flex-grow: 1;
       }
+      .compare-toolbar-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 10px 22px;
+      }
+      .compare-toolbar-row .compare-controls {
+        margin-bottom: 0;
+      }
       .compare-controls {
         display: flex;
         flex-wrap: wrap;
@@ -1284,16 +1294,29 @@
         font-weight: bold;
         font-size: 11px;
         color: #0b4f8c;
-        min-width: 85px;
+        min-width: 0;
       }
       .compare-controls .compare-field select.ds-date-alt,
       .compare-controls .compare-field .autocomplete-wrapper {
-        width: 150px;
-        min-width: 150px;
+        width: 110px;
+        min-width: 110px;
       }
       .compare-controls .compare-field .autocomplete-wrapper input {
-        width: 150px;
+        width: 110px;
       }
+      #compare-category-wrapper,
+      .compare-controls .compare-field#compare-filter-category-wrapper .autocomplete-wrapper {
+        width: 170px;
+        min-width: 170px;
+      }
+      #compare-category-wrapper input {
+        width: 170px;
+      }
+      .compare-controls .compare-field input.ds-date-alt {
+        width: 105px;
+        min-width: 105px;
+        padding: 8px 8px;
+        font-size: 13.5px;
       }
       .compare-run-btn {
         background-color: #28a745;
@@ -1358,6 +1381,7 @@
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        margin-top: 14px;
         margin-bottom: 10px;
       }
       .compare-summary .box {
@@ -1368,11 +1392,18 @@
         font-size: 11.5px;
         flex: 1;
         min-width: 130px;
+        white-space: nowrap;
       }
       .compare-summary .box b {
-        display: block;
+        display: inline;
         font-size: 13.5px;
         color: #0b4f8c;
+      }
+      .compare-summary .box b::before {
+        content: " = ";
+        color: #495057;
+        font-size: 11.5px;
+        font-weight: normal;
       }
 
       /* ---- ক্যাটাগরি কার্ডগুলো আরও ছোট ও কমপ্যাক্ট ---- */
@@ -1413,9 +1444,16 @@
 
       .cc-header {
         display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 5px 6px;
+        margin-bottom: 5px;
+      }
+      .cc-header-icon-title {
+        display: flex;
         align-items: center;
         gap: 5px;
-        margin-bottom: 4px;
+        flex-shrink: 0;
       }
       .cc-icon {
         width: 20px;
@@ -1892,6 +1930,7 @@
           </button>
         </div>
         <div class="compare-modal-body">
+          <div class="compare-toolbar-row">
           <div class="compare-controls">
             <div class="compare-field">
               <label for="compare-date-1">From</label>
@@ -1904,215 +1943,6 @@
             <button type="button" id="compare-run-btn" class="compare-run-btn">
               Search
             </button>
-          </div>
-
-          <div
-            class="compare-summary"
-            id="compare-summary"
-            style="display: none"
-          >
-            <div class="box">
-              <span id="compare-yesterday-date-label"></span>
-              <b id="compare-total-yesterday-due">0.00</b>
-            </div>
-            <div class="box">
-              <span id="compare-today-date-label"></span>
-              <b id="compare-total-today-due">0.00</b>
-            </div>
-            <div class="box">
-              TOTAL COLLECTION
-              <b id="compare-total-collected">0.00</b>
-            </div>
-            <div class="box">
-              TOTAL CHEMIST
-              <b id="compare-total-chemist">0</b>
-            </div>
-          </div>
-
-          <div
-            class="category-collection-cards"
-            id="compare-category-cards"
-            style="display: none"
-          >
-            <div class="category-collection-card pharma-card">
-              <div class="cc-header">
-                <span class="cc-icon" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
-                    ></path>
-                    <path d="m8.5 8.5 7 7"></path>
-                  </svg>
-                </span>
-                <span class="cc-title">PHARMA</span>
-              </div>
-              <div class="cc-total">
-                <span class="cc-total-value" id="compare-pharma-total-amount"
-                  >0</span
-                >
-                <span class="cc-total-label"
-                  >Total Collection ·
-                  <b id="compare-pharma-total-chemist">0</b> chemist</span
-                >
-              </div>
-              <div class="cc-progress">
-                <div
-                  class="cc-progress-fill"
-                  id="compare-pharma-progress"
-                ></div>
-              </div>
-              <div class="cc-stats">
-                <div class="cc-stat">
-                  <div class="cc-stat-head">
-                    <span class="cc-dot cc-dot-part"></span>
-                    <span class="cc-stat-label">Part</span>
-                  </div>
-                  <span class="cc-stat-value" id="compare-pharma-part-amount"
-                    >0</span
-                  >
-                  <span class="cc-stat-count"
-                    ><span id="compare-pharma-part-chemist">0</span>
-                    chemist</span
-                  >
-                </div>
-                <div class="cc-stat">
-                  <div class="cc-stat-head">
-                    <span class="cc-dot cc-dot-full"></span>
-                    <span class="cc-stat-label">Full</span>
-                  </div>
-                  <span class="cc-stat-value" id="compare-pharma-full-amount"
-                    >0</span
-                  >
-                  <span class="cc-stat-count"
-                    ><span id="compare-pharma-full-chemist">0</span>
-                    chemist</span
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="category-collection-card inm-card">
-              <div class="cc-header">
-                <span class="cc-icon" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
-                    ></path>
-                    <path d="m8.5 8.5 7 7"></path>
-                  </svg>
-                </span>
-                <span class="cc-title">INM</span>
-              </div>
-              <div class="cc-total">
-                <span class="cc-total-value" id="compare-inm-total-amount"
-                  >0</span
-                >
-                <span class="cc-total-label"
-                  >Total Collection ·
-                  <b id="compare-inm-total-chemist">0</b> chemist</span
-                >
-              </div>
-              <div class="cc-progress">
-                <div class="cc-progress-fill" id="compare-inm-progress"></div>
-              </div>
-              <div class="cc-stats">
-                <div class="cc-stat">
-                  <div class="cc-stat-head">
-                    <span class="cc-dot cc-dot-part"></span>
-                    <span class="cc-stat-label">Part</span>
-                  </div>
-                  <span class="cc-stat-value" id="compare-inm-part-amount"
-                    >0</span
-                  >
-                  <span class="cc-stat-count"
-                    ><span id="compare-inm-part-chemist">0</span> chemist</span
-                  >
-                </div>
-                <div class="cc-stat">
-                  <div class="cc-stat-head">
-                    <span class="cc-dot cc-dot-full"></span>
-                    <span class="cc-stat-label">Full</span>
-                  </div>
-                  <span class="cc-stat-value" id="compare-inm-full-amount"
-                    >0</span
-                  >
-                  <span class="cc-stat-count"
-                    ><span id="compare-inm-full-chemist">0</span> chemist</span
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="category-collection-card isv-card">
-              <div class="cc-header">
-                <span class="cc-icon" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
-                    ></path>
-                    <path d="m8.5 8.5 7 7"></path>
-                  </svg>
-                </span>
-                <span class="cc-title">ISV</span>
-              </div>
-              <div class="cc-total">
-                <span class="cc-total-value" id="compare-isv-total-amount"
-                  >0</span
-                >
-                <span class="cc-total-label"
-                  >Total Collection ·
-                  <b id="compare-isv-total-chemist">0</b> chemist</span
-                >
-              </div>
-              <div class="cc-progress">
-                <div class="cc-progress-fill" id="compare-isv-progress"></div>
-              </div>
-              <div class="cc-stats">
-                <div class="cc-stat">
-                  <div class="cc-stat-head">
-                    <span class="cc-dot cc-dot-part"></span>
-                    <span class="cc-stat-label">Part</span>
-                  </div>
-                  <span class="cc-stat-value" id="compare-isv-part-amount"
-                    >0</span
-                  >
-                  <span class="cc-stat-count"
-                    ><span id="compare-isv-part-chemist">0</span> chemist</span
-                  >
-                </div>
-                <div class="cc-stat">
-                  <div class="cc-stat-head">
-                    <span class="cc-dot cc-dot-full"></span>
-                    <span class="cc-stat-label">Full</span>
-                  </div>
-                  <span class="cc-stat-value" id="compare-isv-full-amount"
-                    >0</span
-                  >
-                  <span class="cc-stat-count"
-                    ><span id="compare-isv-full-chemist">0</span> chemist</span
-                  >
-                </div>
-              </div>
-            </div>
           </div>
 
           <div
@@ -2221,6 +2051,216 @@
               Download 
             </button>
           </div>
+          </div>
+
+          <div
+            class="compare-summary"
+            id="compare-summary"
+            style="display: none"
+          >
+            <div class="box">
+              <span id="compare-yesterday-date-label"></span>
+              <b id="compare-total-yesterday-due">0.00</b>
+            </div>
+            <div class="box">
+              <span id="compare-today-date-label"></span>
+              <b id="compare-total-today-due">0.00</b>
+            </div>
+            <div class="box">
+              TOTAL COLLECTION
+              <b id="compare-total-collected">0.00</b>
+            </div>
+            <div class="box">
+              TOTAL CHEMIST
+              <b id="compare-total-chemist">0</b>
+            </div>
+          </div>
+
+          <div
+            class="category-collection-cards"
+            id="compare-category-cards"
+            style="display: none"
+          >
+            <div class="category-collection-card pharma-card">
+              <div class="cc-header">
+                <span class="cc-header-icon-title">
+                  <span class="cc-icon" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
+                      ></path>
+                      <path d="m8.5 8.5 7 7"></path>
+                    </svg>
+                  </span>
+                  <span class="cc-title">PHARMA</span>
+                </span>
+                <span class="cc-total-value" id="compare-pharma-total-amount"
+                  >0</span
+                >
+                <span class="cc-total-label"
+                  >Total Collection ·
+                  <b id="compare-pharma-total-chemist">0</b> chemist</span
+                >
+              </div>
+              <div class="cc-progress">
+                <div
+                  class="cc-progress-fill"
+                  id="compare-pharma-progress"
+                ></div>
+              </div>
+              <div class="cc-stats">
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-part"></span>
+                    <span class="cc-stat-label">Part</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-pharma-part-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-pharma-part-chemist">0</span>
+                    chemist</span
+                  >
+                </div>
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-full"></span>
+                    <span class="cc-stat-label">Full</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-pharma-full-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-pharma-full-chemist">0</span>
+                    chemist</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="category-collection-card inm-card">
+              <div class="cc-header">
+                <span class="cc-header-icon-title">
+                  <span class="cc-icon" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
+                      ></path>
+                      <path d="m8.5 8.5 7 7"></path>
+                    </svg>
+                  </span>
+                  <span class="cc-title">INM</span>
+                </span>
+                <span class="cc-total-value" id="compare-inm-total-amount"
+                  >0</span
+                >
+                <span class="cc-total-label"
+                  >Total Collection ·
+                  <b id="compare-inm-total-chemist">0</b> chemist</span
+                >
+              </div>
+              <div class="cc-progress">
+                <div class="cc-progress-fill" id="compare-inm-progress"></div>
+              </div>
+              <div class="cc-stats">
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-part"></span>
+                    <span class="cc-stat-label">Part</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-inm-part-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-inm-part-chemist">0</span> chemist</span
+                  >
+                </div>
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-full"></span>
+                    <span class="cc-stat-label">Full</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-inm-full-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-inm-full-chemist">0</span> chemist</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="category-collection-card isv-card">
+              <div class="cc-header">
+                <span class="cc-header-icon-title">
+                  <span class="cc-icon" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"
+                      ></path>
+                      <path d="m8.5 8.5 7 7"></path>
+                    </svg>
+                  </span>
+                  <span class="cc-title">ISV</span>
+                </span>
+                <span class="cc-total-value" id="compare-isv-total-amount"
+                  >0</span
+                >
+                <span class="cc-total-label"
+                  >Total Collection ·
+                  <b id="compare-isv-total-chemist">0</b> chemist</span
+                >
+              </div>
+              <div class="cc-progress">
+                <div class="cc-progress-fill" id="compare-isv-progress"></div>
+              </div>
+              <div class="cc-stats">
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-part"></span>
+                    <span class="cc-stat-label">Part</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-isv-part-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-isv-part-chemist">0</span> chemist</span
+                  >
+                </div>
+                <div class="cc-stat">
+                  <div class="cc-stat-head">
+                    <span class="cc-dot cc-dot-full"></span>
+                    <span class="cc-stat-label">Full</span>
+                  </div>
+                  <span class="cc-stat-value" id="compare-isv-full-amount"
+                    >0</span
+                  >
+                  <span class="cc-stat-count"
+                    ><span id="compare-isv-full-chemist">0</span> chemist</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div class="compare-table-wrapper">
             <table id="compare-table">
@@ -2235,7 +2275,7 @@
                   <th class="text-left">RUTE NAM</th>
                   <th>CATEGORY</th>
                   <th>PREVIOUS DUE</th>
-                  <th></th>
+                  <th>TODAY DUE</th>
                   <th>TOTAL COLLECTION</th>
                 </tr>
               </thead>
@@ -2420,9 +2460,11 @@
               .once("value");
             const combined = new Set();
             if (snap.exists()) {
+              const META_KEYS = new Set(["category", "total_records"]);
               snap.forEach((child) => {
                 const key = String(child.key || "").trim();
                 if (!key) return;
+                if (META_KEYS.has(key.toLowerCase())) return; // মেটাডাটা key বাদ
                 const idx = key.indexOf("_");
                 const display =
                   idx > -1
@@ -2689,10 +2731,10 @@
           loadingOverlay.style.display = "none";
         }
 
-        function renderTable(data, page) {
+        function renderTable(data, page, fullRender = false) {
           tableBody.innerHTML = "";
-          const start = (page - 1) * rowsPerPage;
-          const end = start + rowsPerPage;
+          const start = fullRender ? 0 : (page - 1) * rowsPerPage;
+          const end = fullRender ? data.length : start + rowsPerPage;
           const pageData = data.slice(start, end);
           if (pageData.length === 0) {
             tableBody.innerHTML =
@@ -3259,6 +3301,25 @@
 
         // ---- Preview: সার্ভার ছাড়াই ক্লায়েন্ট-সাইডে নতুন ট্যাবে প্রিন্ট-প্রিভিউ ----
         previewBtn.addEventListener("click", () => {
+          // Route/Category ফিল্টারে 'All' সিলেক্ট আছে কি না চেক করা
+          const filterBy = searchBySelect.value;
+          const routeCategoryQuery =
+            filterBy === "route" || filterBy === "category"
+              ? routeCategoryFilterInput.value.trim()
+              : "";
+          const isAllSelected =
+            (filterBy !== "route" && filterBy !== "category") ||
+            routeCategoryQuery === "";
+
+          const previousCurrentPage = currentPage;
+
+          if (isAllSelected) {
+            // 'All' সিলেক্ট থাকলে পেজিনেশন বাদ দিয়ে পুরো ফিল্টার্ড ডাটা একসাথে রেন্ডার করা হচ্ছে,
+            // যাতে প্রিভিউ পুরো ডাটাসেট PDF/রিপোর্টের মতো একসাথে দেখায়
+            renderTable(filteredData, 1, true);
+          }
+          // নির্দিষ্ট Route/Category সিলেক্ট থাকলে বর্তমানে স্ক্রিনে যা আছে (যেটা Print করলেও তাই দেখাবে) তাই ব্যবহার হবে
+
           addPageTotalsForPrint();
           // Print বাটনটি এখন print-info-row এর ভিতরে থাকতে পারে (DR সিলেক্ট থাকলে),
           // প্রিভিউতে যেন এই বাটনটি না দেখায় তাই সাময়িকভাবে লুকানো হচ্ছে
@@ -3275,12 +3336,20 @@
           const previewWindow = window.open("", "_blank");
           if (!previewWindow) {
             alert("পপ-আপ ব্লক করা আছে। অনুগ্রহ করে পপ-আপ অনুমতি দিন।");
+            if (isAllSelected) {
+              renderTable(filteredData, previousCurrentPage);
+            }
             return;
           }
           previewWindow.document.write(`<!DOCTYPE html><html><head>${printHead}
             <style>.print-main-header{display:block !important;} body{padding:20px;}</style>
         </head><body>${printBody}</body></html>`);
           previewWindow.document.close();
+
+          if (isAllSelected) {
+            // প্রিভিউ জেনারেট হওয়ার পর মূল স্ক্রিনে আগের পেজিনেটেড ভিউ ফিরিয়ে আনা হচ্ছে
+            renderTable(filteredData, previousCurrentPage);
+          }
           updateAllTotals();
         });
 
