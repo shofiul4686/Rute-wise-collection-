@@ -176,6 +176,37 @@
         min-width: 130px;
       }
 
+      #payment-mode-filter {
+        padding: 6px 8px;
+        font-size: 13px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1.5px solid #ced4da;
+        background: #fbfcfe;
+        color: #0b4f8c;
+        font-weight: 600;
+        min-width: 110px;
+        box-sizing: border-box;
+        cursor: pointer;
+      }
+
+      #division-filter,
+      #route-name-filter,
+      #raw-category-filter {
+        padding: 6px 8px;
+        font-size: 13px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1.5px solid #ced4da;
+        background: #fbfcfe;
+        color: #0b4f8c;
+        font-weight: 600;
+        min-width: 110px;
+        box-sizing: border-box;
+        cursor: pointer;
+        margin-right: 6px;
+      }
+
       #route-category-filter {
         padding: 8px 30px 8px 10px;
         font-size: 16px;
@@ -355,22 +386,24 @@
       }
       .date-picker-field svg {
         position: absolute;
-        left: 11px;
+        left: 5px;
         pointer-events: none;
         color: #0b4f8c;
+        width: 11px;
+        height: 11px;
       }
       .ds-date-alt {
-        padding: 8px 12px 8px 34px;
-        font-size: 15px;
+        padding: 5px 4px 5px 20px;
+        font-size: 10.5px;
         font-weight: 600;
-        height: 40px;
-        border-radius: 6px;
+        height: 32px;
+        border-radius: 5px;
         border: 1.5px solid #ced4da;
         background: #fbfcfe;
         color: #0b4f8c;
         cursor: pointer;
         box-sizing: border-box;
-        min-width: 150px;
+        min-width: 78px;
         transition:
           border-color 0.15s ease,
           box-shadow 0.15s ease;
@@ -443,6 +476,18 @@
         display: inline-flex;
         flex-direction: column;
         width: 100%;
+      }
+
+      .date-wise-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .date-wise-wrapper label {
+        font-weight: bold;
+        font-size: 13px;
+        color: #0b4f8c;
+        white-space: nowrap;
       }
 
       /* ---- ইনপুটে টাইপ করলে দেখা যাবে এমন Clear (X) বাটন ---- */
@@ -851,6 +896,34 @@
         font-size: 10px;
         color: #444;
         line-height: 1.3;
+      }
+
+      .source-badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
+      .source-badge-da {
+        background-color: #fde8d7;
+        color: #a15c1e;
+        border: 1px solid #f0c393;
+      }
+
+      .due-amount-value {
+        display: inline-block;
+      }
+
+      .invoice-count-note {
+        display: inline-block;
+        font-size: 8px;
+        font-weight: 400 !important;
+        color: #777 !important;
+        -webkit-text-stroke: 0 !important;
+        line-height: 1.2;
       }
 
       td .mobile-input {
@@ -1718,7 +1791,7 @@
           </div>
         </div>
 
-        <!-- একটাই টুলবার লাইনে: Date (কাস্টম পিকার), Search By, Print/Preview/Save, Prev/Page/Next -->
+        <!-- একটাই টুলবার লাইনে: Date (From/To), Search By, Print/Preview/Save, Prev/Page/Next -->
         <div class="toolbar-row">
           <div class="toolbar-item" id="date-toolbar-item">
             <label for="ds-date">Date:</label>
@@ -1750,6 +1823,12 @@
               <option value="category">Category</option>
               <option value="sl">Sl</option>
               <option value="chemist">Chemist</option>
+              <option value="daWise">DA WISE</option>
+              <option value="invoice">INVOICE</option>
+              <option value="dateWise">DATE WISE</option>
+            </select>
+            <select id="payment-mode-filter" title="Payment Mode দিয়ে ফিল্টার করুন">
+              <option value="all">All Payment Mode</option>
             </select>
             <input
               type="text"
@@ -1779,6 +1858,66 @@
                 class="autocomplete-suggestions"
               ></div>
             </div>
+            <div
+              class="date-wise-wrapper"
+              id="date-wise-wrapper"
+              style="display: none"
+            >
+              <label for="date-wise-from">FORM:</label>
+              <div class="date-picker-field">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="3"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <input type="text" id="date-wise-from" />
+              </div>
+              <label for="date-wise-to">TO:</label>
+              <div class="date-picker-field">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="3"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <input type="text" id="date-wise-to" />
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="toolbar-item"
+            id="extra-filters-item"
+            style="display: none"
+          >
+            <select id="division-filter" title="Division দিয়ে ফিল্টার করুন">
+              <option value="all">All Division</option>
+            </select>
+            <select id="route-name-filter" title="Route Name দিয়ে ফিল্টার করুন">
+              <option value="all">All Route</option>
+            </select>
+            <select id="raw-category-filter" title="Category দিয়ে ফিল্টার করুন">
+              <option value="all">All Category</option>
+            </select>
           </div>
 
           <div class="toolbar-item page-buttons">
@@ -2394,6 +2533,32 @@
 
         const ALL_DIVISIONS = ["pharma", "inm", "isv"];
 
+        // ---- ডেট পিকার থেকে আসা মান (একটা তারিখ অথবা "2026-07-01 to 2026-07-05" ফরম্যাটের রেঞ্জ) পার্স করা ----
+        function parseDateRangeValue(dateValue) {
+          if (dateValue.includes(" to ")) {
+            const [start, end] = dateValue.split(" to ").map((s) => s.trim());
+            return { start, end };
+          }
+          return { start: dateValue, end: dateValue };
+        }
+
+        // ---- শুরু ও শেষ তারিখের মধ্যে প্রতিটা দিনের yyyy-mm-dd লিস্ট বানানো ----
+        function getDateRangeArray(start, end) {
+          const dates = [];
+          let current = new Date(start + "T00:00:00");
+          const last = new Date(end + "T00:00:00");
+          if (isNaN(current.getTime()) || isNaN(last.getTime())) return [start];
+
+          while (current <= last) {
+            const y = current.getFullYear();
+            const m = String(current.getMonth() + 1).padStart(2, "0");
+            const d = String(current.getDate()).padStart(2, "0");
+            dates.push(`${y}-${m}-${d}`);
+            current.setDate(current.getDate() + 1);
+          }
+          return dates;
+        }
+
         // ---- DCC_UNPAID/{division}/{year}/{month}/{formattedDate} থেকে একটা ডিভিশনের ডাটা টেনে আনা ----
         async function fetchDccUnpaidData(division, dateValue) {
           const { year, monthCode, formattedDate } =
@@ -2417,25 +2582,167 @@
               routeName: d["NAME OF ROUTE"] || "",
               category: division ? division.toUpperCase() : d["CATEGORY"] || "",
               territory: d["TR NAME"] || "",
+              source: "DCC",
             });
           });
           return { rows, path };
         }
 
-        // ---- তিনটা ডিভিশন (PHARMA, INM, ISV) একসাথে টেনে এনে একটা লিস্টে মার্জ করা, নির্বাচিত তারিখ অনুযায়ী ----
-        async function fetchAllDivisionsData(dateValue) {
+        // ---- DA_UNPAID/{division}/{year}/{month}/{formattedDate} থেকে একটা ডিভিশনের, একটা নির্দিষ্ট দিনের DA wise ডাটা টেনে আনা ----
+        // এখানে প্রতিটা ইনভয়েস (প্রতিটা ডকুমেন্ট) আলাদা row হিসেবে রাখা হয় — সাম করা হয় না।
+        // কোড অনুযায়ী সাম দরকার হলে aggregateDaRowsByCode() ফাংশন ব্যবহার করে আলাদাভাবে করা হয়।
+        async function fetchDaUnpaidDataSingleDay(division, dateValue) {
+          const { year, monthCode, formattedDate } =
+            buildDccPathInfo(dateValue);
+          const path = `DA_UNPAID/${division}/${year}/${monthCode}/${formattedDate}`;
+          const snapshot = await firestoreDb.collection(path).get();
+
+          function parseAmt(value) {
+            if (value === null || value === undefined || value === "")
+              return 0;
+            const cleaned = String(value).replace(/,/g, "").trim();
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : num;
+          }
+
+          const rows = [];
+          snapshot.forEach((doc) => {
+            const d = doc.data();
+            const code = d["Client ID"] || "";
+            const name = d["Client Name"] || "";
+            const invoiceNo = d["Invoice No"] || "";
+            const amount =
+              parseAmt(d["Total OS"]) || parseAmt(d["Total Amount"]);
+
+            rows.push({
+              division: division,
+              code: code,
+              chemistName: name,
+              chemistInfo: code ? `${code} - ${name}` : name,
+              address: invoiceNo ? `Invoice: ${invoiceNo}` : "",
+              mobileNumber: "",
+              duesAmount: amount,
+              routeName: d["Route Name"] || "",
+              category: division
+                ? division.toUpperCase()
+                : d["CATEGORY"] || "",
+              // rawCategory: Firestore-এ যা আসলে "CATEGORY" ফিল্ডে সেভ করা আছে (যেমন "DCC") —
+              // এটা dashboard কার্ডের জন্য ব্যবহৃত division-based category থেকে আলাদা রাখা হচ্ছে
+              rawCategory: (d["CATEGORY"] || "").trim(),
+              territory: "",
+              source: "DA",
+              invoiceNo: invoiceNo,
+              paymentMode: (d["Payment Mode"] || "").trim(),
+              unpaidDate: dateValue,
+              // invoiceDate: Firestore ডকুমেন্টের আসল "Date" ফিল্ড (ইনভয়েসের নিজস্ব তারিখ) —
+              // Search By: DATE WISE ফিল্টার এই ফিল্ড দিয়েই কাজ করে
+              invoiceDate: (d["Date"] || "").trim(),
+            });
+          });
+
+          return { rows, path };
+        }
+
+        // ---- একটা ডিভিশনের DA wise ডাটা টেনে আনা — dateValue একটা একক তারিখ অথবা রেঞ্জ ("start to end") হতে পারে ----
+        // রেঞ্জ হলে প্রতিটা দিনের ডাটা আলাদাভাবে টেনে একটাই লিস্টে জোড়া লাগানো হয়
+        async function fetchDaUnpaidData(division, dateValue) {
+          const { start, end } = parseDateRangeValue(dateValue);
+          const dateList = getDateRangeArray(start, end);
+
+          if (dateList.length <= 1) {
+            return fetchDaUnpaidDataSingleDay(division, dateList[0] || start);
+          }
+
           const results = await Promise.all(
+            dateList.map((d) =>
+              fetchDaUnpaidDataSingleDay(division, d).catch((err) => {
+                console.error(
+                  `${division} - ${d} তারিখের DA ডাটা লোড করতে সমস্যা:`,
+                  err,
+                );
+                return {
+                  rows: [],
+                  path: `DA_UNPAID/${division}/... (${d}) (লোড ব্যর্থ)`,
+                };
+              }),
+            ),
+          );
+
+          let rows = [];
+          const paths = [];
+          results.forEach((r) => {
+            rows = rows.concat(r.rows);
+            paths.push(r.path);
+          });
+
+          return { rows, path: paths.join(", ") };
+        }
+
+        // ---- একই Client ID/Code-এর একাধিক ইনভয়েস row-কে একটাই row-এ সাম করে দেয় (Total OS/Total Amount যোগ করে) ----
+        // Route ফিল্টার করলে বা "Search By: DA WISE" সিলেক্ট করলে এই ফাংশন ব্যবহার হয়
+        function aggregateDaRowsByCode(rows) {
+          const map = {};
+          const order = [];
+
+          rows.forEach((row) => {
+            const key = `${row.division}__${row.code || row.chemistName}`;
+            if (!map[key]) {
+              map[key] = {
+                division: row.division,
+                code: row.code,
+                chemistName: row.chemistName,
+                chemistInfo: row.chemistInfo,
+                address: "",
+                mobileNumber: row.mobileNumber,
+                duesAmount: 0,
+                routeName: row.routeName,
+                category: row.category,
+                rawCategory: row.rawCategory || "",
+                territory: row.territory,
+                source: row.source,
+                invoiceNo: "",
+                invoiceCount: 0,
+                paymentMode: row.paymentMode || "",
+              };
+              order.push(key);
+            }
+            const bucket = map[key];
+            bucket.duesAmount += parseAmountSafe(row.duesAmount);
+            bucket.invoiceCount += 1;
+            if (!bucket.routeName && row.routeName) {
+              bucket.routeName = row.routeName;
+            }
+            if (!bucket.paymentMode && row.paymentMode) {
+              bucket.paymentMode = row.paymentMode;
+            }
+            if (!bucket.rawCategory && row.rawCategory) {
+              bucket.rawCategory = row.rawCategory;
+            }
+          });
+
+          const result = order.map((key) => map[key]);
+          result.forEach((r, idx) => {
+            r.address = "";
+            r.serial = idx + 1;
+          });
+          return result;
+        }
+
+        // ---- তিনটা ডিভিশন (PHARMA, INM, ISV) একসাথে টেনে এনে একটা লিস্টে মার্জ করা, নির্বাচিত তারিখ অনুযায়ী ----
+        // এখন শুধু DA wise (DA_UNPAID) ডাটা দিয়েই হিসাব হয় — Chemist wise (DCC_UNPAID) বাদ দেওয়া হয়েছে
+        async function fetchAllDivisionsData(dateValue) {
+          const daResults = await Promise.all(
             ALL_DIVISIONS.map((div) =>
-              fetchDccUnpaidData(div, dateValue).catch((err) => {
-                console.error(`${div} লোড করতে সমস্যা:`, err);
-                return { rows: [], path: `DCC_UNPAID/${div}/... (লোড ব্যর্থ)` };
+              fetchDaUnpaidData(div, dateValue).catch((err) => {
+                console.error(`${div} DA ডাটা লোড করতে সমস্যা:`, err);
+                return { rows: [], path: `DA_UNPAID/${div}/... (লোড ব্যর্থ)` };
               }),
             ),
           );
 
           let combinedRows = [];
           const paths = [];
-          results.forEach((res) => {
+          daResults.forEach((res) => {
             combinedRows = combinedRows.concat(res.rows);
             paths.push(res.path);
           });
@@ -2483,8 +2790,10 @@
         // ---- সংগ্রহ করা কালেকশন ডাটা Firestore-এ ফেরত সেভ করা ----
         // প্রতিটা রেকর্ডের নিজস্ব division অনুযায়ী DCC_COLLECTION/{division}/{year}/{month}/{formattedDate}/{chemistCode}
         async function saveCollectionDataToFirestore(dataToSave, dateValue) {
+          // dateValue রেঞ্জ হলে (যেমন "2026-07-01 to 2026-07-05") শেষ তারিখটাই সেভের জন্য ব্যবহার করা হয়
+          const { end: saveDateValue } = parseDateRangeValue(dateValue);
           const { year, monthCode, formattedDate } =
-            buildDccPathInfo(dateValue);
+            buildDccPathInfo(saveDateValue);
 
           // division অনুযায়ী গ্রুপ করা, কারণ প্রতিটা ডিভিশনের ডাটা আলাদা পাথে সেভ হয়
           const groups = {};
@@ -2549,6 +2858,18 @@
         const loadingOverlay = document.getElementById("loading-overlay");
         const searchBySelect = document.getElementById("search-by");
         const textFilterInput = document.getElementById("text-filter");
+        const paymentModeFilterSelect = document.getElementById(
+          "payment-mode-filter",
+        );
+        const divisionFilterSelect = document.getElementById(
+          "division-filter",
+        );
+        const routeNameFilterSelect = document.getElementById(
+          "route-name-filter",
+        );
+        const rawCategoryFilterSelect = document.getElementById(
+          "raw-category-filter",
+        );
         const routeCategoryFilterWrapper = document.getElementById(
           "route-category-wrapper",
         );
@@ -2655,6 +2976,7 @@
         }
 
         // ds-date এ কাস্টম, মার্জিত ডেট পিকার (flatpickr) — ডিফল্ট আজকের তারিখ, সিলেক্ট করলেই অটো লোড হবে
+        // এটা ঠিক করে দেয় কোন দিনের DA_UNPAID স্ন্যাপশট (Firestore পাথ) লোড হবে
         const dsDatePicker = flatpickr("#ds-date", {
           dateFormat: "Y-m-d",
           altInput: true,
@@ -2666,6 +2988,39 @@
             loadDataFromFirestore();
           },
         });
+
+        // Search By: DATE WISE-এর FORM/TO — এগুলো ইতিমধ্যে লোড হওয়া ডাটার ভেতরের
+        // আসল "Date" ফিল্ড (ইনভয়েসের নিজস্ব তারিখ) দিয়ে ফিল্টার করার জন্য, আলাদা flatpickr
+        const dateWiseFromInput = document.getElementById("date-wise-from");
+        const dateWiseToInput = document.getElementById("date-wise-to");
+        let dateWiseFromPicker = null;
+        let dateWiseToPicker = null;
+        function initDateWisePickers() {
+          if (!dateWiseFromPicker && dateWiseFromInput) {
+            dateWiseFromPicker = flatpickr(dateWiseFromInput, {
+              dateFormat: "Y-m-d",
+              altInput: true,
+              altFormat: "d M, Y",
+              altInputClass: "ds-date-alt",
+              disableMobile: true,
+              onChange: function () {
+                filterTable();
+              },
+            });
+          }
+          if (!dateWiseToPicker && dateWiseToInput) {
+            dateWiseToPicker = flatpickr(dateWiseToInput, {
+              dateFormat: "Y-m-d",
+              altInput: true,
+              altFormat: "d M, Y",
+              altInputClass: "ds-date-alt",
+              disableMobile: true,
+              onChange: function () {
+                filterTable();
+              },
+            });
+          }
+        }
 
         if (scheduleDateInput) {
           const today = new Date();
@@ -2749,7 +3104,12 @@
             tr.dataset.route = row.routeName;
             tr.dataset.category = row.category;
             tr.dataset.territory = row.territory;
+            tr.dataset.source = row.source || "DCC";
             const newSlNo = start + index + 1;
+            const invoiceCountNote =
+              row.invoiceCount && row.invoiceCount > 1
+                ? `<br><span class="invoice-count-note">${row.invoiceCount} Invoice</span>`
+                : "";
             tr.innerHTML = `
                 <td data-column="sl">${newSlNo}</td>
                 <td class="text-left">
@@ -2759,7 +3119,7 @@
                         <input type="text" class="mobile-input" placeholder="Mobile No" value="${row.mobileNumber}">
                     </div>
                 </td>
-                <td class="due-amount" data-initial-due="${parseFloat(row.duesAmount).toFixed(2)}">${parseFloat(row.duesAmount).toFixed(2)}</td>
+                <td class="due-amount" data-initial-due="${parseFloat(row.duesAmount).toFixed(2)}"><span class="due-amount-value">${parseFloat(row.duesAmount).toFixed(2)}</span>${invoiceCountNote}</td>
                 <td class="collection-amount-col"><input type="text" class="collection-input" data-col="1" value=""></td>
                 <td class="collection-amount-col"><input type="text" class="collection-input" data-col="2" value=""></td>
                 <td class="collection-amount-col"><input type="text" class="collection-input" data-col="3" value=""></td>
@@ -2794,6 +3154,74 @@
           updateAllTotals();
         }
 
+        // ---- Payment Mode ড্রপডাউনে ডাটার মধ্যে যত ইউনিক Payment Mode আছে সেগুলো বসানো হয় ----
+        function populatePaymentModeFilter() {
+          const uniqueModes = Array.from(
+            new Set(
+              allData
+                .map((row) => (row.paymentMode || "").trim())
+                .filter((v) => v !== ""),
+            ),
+          ).sort();
+
+          const previousValue = paymentModeFilterSelect.value;
+          paymentModeFilterSelect.innerHTML =
+            '<option value="all">All Payment Mode</option>' +
+            uniqueModes
+              .map((m) => `<option value="${m}">${m}</option>`)
+              .join("");
+
+          paymentModeFilterSelect.value = uniqueModes.includes(previousValue)
+            ? previousValue
+            : "all";
+        }
+
+        // ---- সাধারণ ফাংশন: allData থেকে একটা ফিল্ডের ইউনিক ভ্যালু বের করে একটা ড্রপডাউনে বসায় ----
+        function populateGenericFilter(selectEl, fieldName, allLabel, labelFn) {
+          const uniqueValues = Array.from(
+            new Set(
+              allData
+                .map((row) => (row[fieldName] || "").toString().trim())
+                .filter((v) => v !== ""),
+            ),
+          ).sort();
+
+          const previousValue = selectEl.value;
+          selectEl.innerHTML =
+            `<option value="all">${allLabel}</option>` +
+            uniqueValues
+              .map(
+                (v) =>
+                  `<option value="${v}">${labelFn ? labelFn(v) : v}</option>`,
+              )
+              .join("");
+
+          selectEl.value = uniqueValues.includes(previousValue)
+            ? previousValue
+            : "all";
+        }
+
+        function populateDivisionFilter() {
+          populateGenericFilter(
+            divisionFilterSelect,
+            "division",
+            "All Division",
+            (v) => v.toUpperCase(),
+          );
+        }
+
+        function populateRouteNameFilter() {
+          populateGenericFilter(routeNameFilterSelect, "routeName", "All Route");
+        }
+
+        function populateRawCategoryFilter() {
+          populateGenericFilter(
+            rawCategoryFilterSelect,
+            "rawCategory",
+            "All Category",
+          );
+        }
+
         function displayData(data) {
           hideLoader();
           if (!data || data.length === 0) {
@@ -2801,6 +3229,10 @@
               '<tr><td colspan="17">No data available.</td></tr>';
             allData = [];
             filteredData = [];
+            populatePaymentModeFilter();
+            populateDivisionFilter();
+            populateRouteNameFilter();
+            populateRawCategoryFilter();
             updateDashboardTotals();
             updatePaginationButtons(0);
             return;
@@ -2808,6 +3240,10 @@
           allData = data;
           filteredData = data;
           populateRouteCategoryFilter("route");
+          populatePaymentModeFilter();
+          populateDivisionFilter();
+          populateRouteNameFilter();
+          populateRawCategoryFilter();
           filterTable();
         }
 
@@ -2843,14 +3279,20 @@
         loadDataBtn.addEventListener("click", loadDataFromFirestore);
 
         function updateDashboardTotals() {
-          let pharmaChemist = 0;
           let pharmaAmount = 0;
-          let sinavisionChemist = 0;
           let sinavisionAmount = 0;
-          let inmChemist = 0;
           let inmAmount = 0;
-          let grandTotalChemist = 0;
           let grandTotalAmount = 0;
+
+          let pharmaInvoice = 0;
+          let sinavisionInvoice = 0;
+          let inmInvoice = 0;
+          let grandTotalInvoice = 0;
+
+          const pharmaChemistSet = new Set();
+          const sinavisionChemistSet = new Set();
+          const inmChemistSet = new Set();
+          const grandChemistSet = new Set();
 
           // FIX: কমা-ফরম্যাটেড সংখ্যা (যেমন "1,250.00") থেকেও সঠিক amount বের করার জন্য
           function parseAmount(value) {
@@ -2863,30 +3305,39 @@
           filteredData.forEach((row) => {
             const amount = parseAmount(row.duesAmount);
             const category = (row.category || "").toUpperCase();
+            // Row aggregate করা থাকলে invoiceCount থেকে আসল ইনভয়েস সংখ্যা নেওয়া হয়,
+            // না থাকলে (raw/invoice-wise মোডে) এই row নিজেই একটা ইনভয়েস ধরা হয়
+            const invoiceCount = row.invoiceCount || 1;
+            const chemistKey = `${row.division}__${row.code || row.chemistName}`;
 
             if (category.includes("PHARMA")) {
-              pharmaChemist++;
+              pharmaChemistSet.add(chemistKey);
+              pharmaInvoice += invoiceCount;
               pharmaAmount += amount;
             } else if (category.includes("ISV")) {
-              sinavisionChemist++;
+              sinavisionChemistSet.add(chemistKey);
+              sinavisionInvoice += invoiceCount;
               sinavisionAmount += amount;
             } else if (category.includes("INM")) {
-              inmChemist++;
+              inmChemistSet.add(chemistKey);
+              inmInvoice += invoiceCount;
               inmAmount += amount;
             }
 
-            grandTotalChemist++;
+            grandChemistSet.add(chemistKey);
+            grandTotalInvoice += invoiceCount;
             grandTotalAmount += amount;
           });
 
           // FIX: innerText এর বদলে textContent ব্যবহার করা হলো (রিলায়েবল আপডেটের জন্য)
-          pharmaTotalChemistSpan.textContent = `Total Chemist = ${pharmaChemist}`;
+          // Total Chemist ও Total Invoice আলাদা লাইনে দেখানোর জন্য innerHTML + <br> ব্যবহার করা হলো
+          pharmaTotalChemistSpan.innerHTML = `Total Chemist = ${pharmaChemistSet.size}<br>Total Invoice = ${pharmaInvoice}`;
           pharmaTotalAmountSpan.textContent = `Total Amount = ${pharmaAmount.toFixed(2)}`;
-          sinavisionTotalChemistSpan.textContent = `Total Chemist = ${sinavisionChemist}`;
+          sinavisionTotalChemistSpan.innerHTML = `Total Chemist = ${sinavisionChemistSet.size}<br>Total Invoice = ${sinavisionInvoice}`;
           sinavisionTotalAmountSpan.textContent = `Total Amount = ${sinavisionAmount.toFixed(2)}`;
-          inmTotalChemistSpan.textContent = `Total Chemist = ${inmChemist}`;
+          inmTotalChemistSpan.innerHTML = `Total Chemist = ${inmChemistSet.size}<br>Total Invoice = ${inmInvoice}`;
           inmTotalAmountSpan.textContent = `Total Amount = ${inmAmount.toFixed(2)}`;
-          grandTotalChemistSpan.textContent = `Total Chemist = ${grandTotalChemist}`;
+          grandTotalChemistSpan.innerHTML = `Total Chemist = ${grandChemistSet.size}<br>Total Invoice = ${grandTotalInvoice}`;
           grandTotalAmountSpan.textContent = `Total Amount = ${grandTotalAmount.toFixed(2)}`;
         }
         function updateAllTotals() {
@@ -2933,7 +3384,10 @@
             const rowTotalCell = row.querySelector(".total-collection");
             rowTotalCell.innerText = fmt(rowCollectionTotal);
             const remainingDue = initialDueAmount - rowCollectionTotal;
-            dueAmountCell.innerText =
+            const dueAmountValueEl =
+              dueAmountCell.querySelector(".due-amount-value") ||
+              dueAmountCell;
+            dueAmountValueEl.textContent =
               remainingDue === 0 ? "" : remainingDue.toFixed(2);
             totalDue += remainingDue;
           });
@@ -2981,29 +3435,97 @@
               ? routeCategoryFilterInput.value.toLowerCase().trim()
               : textFilterInput.value.toLowerCase();
 
-          filteredData = allData.filter((row) => {
-            let cellValue = "";
+          // এখানে Payment Mode, Division, Route Name, Category — চারটা ড্রপডাউন একসাথে (AND লজিকে)
+          // মিলিয়ে বেস ডাটা তৈরি করা হচ্ছে, তারপর তার উপর Search By লজিক চলবে
+          const selectedPaymentMode = paymentModeFilterSelect
+            ? paymentModeFilterSelect.value
+            : "all";
+          const selectedDivision = divisionFilterSelect
+            ? divisionFilterSelect.value
+            : "all";
+          const selectedRouteName = routeNameFilterSelect
+            ? routeNameFilterSelect.value
+            : "all";
+          const selectedRawCategory = rawCategoryFilterSelect
+            ? rawCategoryFilterSelect.value
+            : "all";
 
-            if (filterBy === "all") {
-              return JSON.stringify(Object.values(row))
-                .toLowerCase()
-                .includes(query);
-            } else {
-              if (filterBy === "sl") {
-                cellValue = String(row.serial).toLowerCase();
-              } else if (filterBy === "chemist") {
-                cellValue = row.chemistName.toLowerCase();
-              } else if (filterBy === "route") {
-                cellValue = row.routeName.toLowerCase();
-              } else if (filterBy === "category") {
-                // ক্যাটাগরি ফিল্টারিং লজিক
-                cellValue = row.category.toLowerCase();
-              }
-
-              // যদি query খালি হয় তবে সব ডেটা দেখাও, অন্যথায় cellValue query অন্তর্ভুক্ত করে কি না দেখাও
-              return query === "" || cellValue.includes(query);
-            }
+          const baseData = allData.filter((row) => {
+            if (
+              selectedPaymentMode !== "all" &&
+              (row.paymentMode || "").trim() !== selectedPaymentMode
+            )
+              return false;
+            if (
+              selectedDivision !== "all" &&
+              (row.division || "").trim() !== selectedDivision
+            )
+              return false;
+            if (
+              selectedRouteName !== "all" &&
+              (row.routeName || "").trim() !== selectedRouteName
+            )
+              return false;
+            if (
+              selectedRawCategory !== "all" &&
+              (row.rawCategory || "").trim() !== selectedRawCategory
+            )
+              return false;
+            return true;
           });
+
+          if (filterBy === "daWise") {
+            // Search By: DA WISE — সব ডাটা কোড (Client ID) অনুযায়ী সাম করে দেখানো হয়
+            filteredData = aggregateDaRowsByCode(baseData);
+          } else if (filterBy === "invoice") {
+            // Search By: INVOICE — প্রতিটা ইনভয়েস আলাদা row হিসেবে (সাম না করে), Invoice No দিয়ে সার্চ
+            filteredData = baseData.filter((row) => {
+              const cellValue = String(row.invoiceNo || "").toLowerCase();
+              return query === "" || cellValue.includes(query);
+            });
+          } else if (filterBy === "dateWise") {
+            // Search By: DATE WISE — ডাটার ভেতরের আসল "Date" ফিল্ড (ইনভয়েসের নিজস্ব তারিখ)
+            // FORM/TO রেঞ্জের মধ্যে পড়লেই দেখাবে, কোনো তারিখ না দিলে সব দেখাবে
+            const fromVal = dateWiseFromInput ? dateWiseFromInput.value : "";
+            const toVal = dateWiseToInput ? dateWiseToInput.value : "";
+            filteredData = baseData.filter((row) => {
+              if (!fromVal && !toVal) return true;
+              const rowDate = row.invoiceDate || "";
+              if (!rowDate) return false;
+              if (fromVal && rowDate < fromVal) return false;
+              if (toVal && rowDate > toVal) return false;
+              return true;
+            });
+          } else if (filterBy === "route") {
+            // Route সিলেক্ট/সার্চ করলে প্রথমে রুট অনুযায়ী ফিল্টার, তারপর কোড অনুযায়ী সাম করে দেখানো হয়
+            const routeFiltered = baseData.filter((row) => {
+              const cellValue = row.routeName.toLowerCase();
+              return query === "" || cellValue.includes(query);
+            });
+            filteredData = aggregateDaRowsByCode(routeFiltered);
+          } else {
+            filteredData = baseData.filter((row) => {
+              let cellValue = "";
+
+              if (filterBy === "all") {
+                return JSON.stringify(Object.values(row))
+                  .toLowerCase()
+                  .includes(query);
+              } else {
+                if (filterBy === "sl") {
+                  cellValue = String(row.serial).toLowerCase();
+                } else if (filterBy === "chemist") {
+                  cellValue = row.chemistName.toLowerCase();
+                } else if (filterBy === "category") {
+                  // ক্যাটাগরি ফিল্টারিং লজিক
+                  cellValue = row.category.toLowerCase();
+                }
+
+                // যদি query খালি হয় তবে সব ডেটা দেখাও, অন্যথায় cellValue query অন্তর্ভুক্ত করে কি না দেখাও
+                return query === "" || cellValue.includes(query);
+              }
+            });
+          }
 
           updateDashboardTotals();
           currentPage = 1;
@@ -3208,24 +3730,47 @@
           nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
         }
         const dateToolbarItem = document.getElementById("date-toolbar-item");
+        const extraFiltersItem = document.getElementById(
+          "extra-filters-item",
+        );
+        const dateWiseWrapper = document.getElementById("date-wise-wrapper");
         searchBySelect.addEventListener("change", (event) => {
           const selectedValue = event.target.value;
           textFilterInput.style.display = "none";
           routeCategoryFilterWrapper.style.display = "none";
           routeCategorySuggestionsBox.style.display = "none";
+          if (dateWiseWrapper) dateWiseWrapper.style.display = "none";
           // All ছাড়া অন্য যেকোনো (Route/Category/Sl/Chemist) সিলেক্ট করলে Date ইনপুট লুকিয়ে যাবে
           if (dateToolbarItem) {
             dateToolbarItem.style.display =
               selectedValue === "all" ? "" : "none";
           }
-          if (selectedValue === "sl" || selectedValue === "chemist") {
+          // Route সিলেক্ট করলে যেমন পাশে ইনপুট বের হয়, ঠিক তেমনই "All" ছাড়া অন্য যেকোনো মোড
+          // সিলেক্ট করলে Payment Mode/Division/Route/Category — এই ৪টা ড্রপডাউনও পাশে বের হবে
+          if (extraFiltersItem) {
+            extraFiltersItem.style.display =
+              selectedValue === "all" ? "none" : "flex";
+          }
+          if (
+            selectedValue === "sl" ||
+            selectedValue === "chemist" ||
+            selectedValue === "invoice"
+          ) {
             textFilterInput.style.display = "";
+            textFilterInput.placeholder =
+              selectedValue === "invoice"
+                ? "Invoice No দিয়ে সার্চ করুন..."
+                : "Search...";
           } else if (
             selectedValue === "route" ||
             selectedValue === "category"
           ) {
             routeCategoryFilterWrapper.style.display = "inline-block";
             populateRouteCategoryFilter(selectedValue);
+          } else if (selectedValue === "dateWise") {
+            // DATE WISE সিলেক্ট করলে পাশে FORM/TO বের হবে
+            initDateWisePickers();
+            if (dateWiseWrapper) dateWiseWrapper.style.display = "inline-flex";
           }
           // NEW FIX: Search By বদলালে আগের DR সিলেকশন সবসময় খালি হবে
           if (drNameInput) {
@@ -3238,6 +3783,10 @@
         });
 
         textFilterInput.addEventListener("input", filterTable);
+        paymentModeFilterSelect.addEventListener("change", filterTable);
+        divisionFilterSelect.addEventListener("change", filterTable);
+        routeNameFilterSelect.addEventListener("change", filterTable);
+        rawCategoryFilterSelect.addEventListener("change", filterTable);
         prevPageBtn.addEventListener("click", () => {
           if (currentPage > 1) {
             currentPage--;
@@ -3265,9 +3814,10 @@
             const category = row.dataset.category;
             const territory = row.dataset.territory;
             const mobile = row.querySelector(".mobile-input").value.trim();
-            const dueAmount = row
-              .querySelector(".due-amount")
-              .textContent.trim();
+            const dueAmount = (
+              row.querySelector(".due-amount-value") ||
+              row.querySelector(".due-amount")
+            ).textContent.trim();
             const totalCollection = row
               .querySelector(".total-collection")
               .textContent.trim();
@@ -3937,6 +4487,7 @@
             });
           }
           if (!compareDate2Picker) {
+            // মূল ডেট পিকারে যে তারিখ সিলেক্ট করা আছে সেটাই ডিফল্ট হিসেবে ব্যবহার করা হচ্ছে
             compareDate2Picker = flatpickr(compareDate2Input, {
               dateFormat: "Y-m-d",
               altInput: true,
@@ -4007,15 +4558,22 @@
               fetchAllDivisionsData(date2),
             ]);
 
-            // Chemist Code দিয়ে ম্যাপ বানানো (division আলাদা হলে code + division একসাথে key হিসেবে ব্যবহার করা ভালো)
-            const buildKey = (row) => `${row.division}__${row.code}`;
+            // এখন fetchAllDivisionsData প্রতিটা ইনভয়েস আলাদা row হিসেবে দেয়,
+            // কিন্তু Compare (Yesterday Due vs Today Due) সবসময় ক্লায়েন্ট (Code) লেভেলে হওয়া দরকার —
+            // তাই কম্পেয়ার করার আগে দুই তারিখের ডাটাই কোড অনুযায়ী সাম করে নেওয়া হচ্ছে
+            const aggRows1 = aggregateDaRowsByCode(res1.rows);
+            const aggRows2 = aggregateDaRowsByCode(res2.rows);
+
+            // Chemist Code দিয়ে ম্যাপ বানানো (division + source আলাদা হলে key-তেও আলাদা রাখা হচ্ছে,
+            // যাতে Chemist wise আর DA wise-এর কোড কাকতালীয়ভাবে মিলে গেলেও গুলিয়ে না যায়)
+            const buildKey = (row) => `${row.division}__${row.source}__${row.code}`;
 
             const map1 = {};
-            res1.rows.forEach((row) => {
+            aggRows1.forEach((row) => {
               map1[buildKey(row)] = row;
             });
             const map2 = {};
-            res2.rows.forEach((row) => {
+            aggRows2.forEach((row) => {
               map2[buildKey(row)] = row;
             });
 
@@ -4039,6 +4597,7 @@
                 routeName: base.routeName,
                 territory: base.territory,
                 category: base.category,
+                source: base.source || "DCC",
                 yesterdayDue,
                 todayDue,
                 collected,
