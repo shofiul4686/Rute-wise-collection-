@@ -623,6 +623,21 @@
         background-color: #17a2b8;
       }
 
+      .page-buttons .data-upload-link {
+        display: inline-flex;
+        align-items: center;
+        background-color: #6f42c1;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .page-buttons .data-upload-link:hover {
+        opacity: 0.8;
+      }
+
       /* Print বাটনটি DR সিলেক্ট করার পর print-info-row এ সরে গেলেও যেন একই লুক থাকে */
       button.print {
         background-color: #17a2b8;
@@ -1293,23 +1308,25 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.4);
+        background: #fff;
         z-index: 2000;
         justify-content: center;
         align-items: center;
-        padding: 10px;
+        padding: 0;
         box-sizing: border-box;
+        overflow: auto;
       }
       .compare-modal-overlay.open {
         display: flex;
       }
       .compare-modal {
         background: #fff;
-        border-radius: 8px;
+        border-radius: 0;
         width: 100%;
-        max-width: 950px;
-        max-height: 90vh;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+        max-width: none;
+        height: 100%;
+        max-height: none;
+        box-shadow: none;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -1376,6 +1393,24 @@
       }
       .compare-controls .compare-field .autocomplete-wrapper input {
         width: 110px;
+      }
+      #compare-filter-value-wrapper.da-wise-filter .autocomplete-wrapper {
+        width: 240px;
+        min-width: 240px;
+      }
+      #compare-filter-value-wrapper.da-wise-filter .autocomplete-wrapper input {
+        width: 240px;
+      }
+      #compare-filter-value-wrapper.da-wise-filter #compare-filter-value-clear {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+      #compare-filter-value-wrapper.da-wise-filter:hover #compare-filter-value-clear,
+      #compare-filter-value-wrapper.da-wise-filter:focus-within
+        #compare-filter-value-clear {
+        opacity: 1;
+        pointer-events: auto;
       }
       #compare-category-wrapper,
       .compare-controls .compare-field#compare-filter-category-wrapper .autocomplete-wrapper {
@@ -1819,13 +1854,15 @@
             <label for="search-by">Search By:</label>
             <select id="search-by">
               <option value="all">All</option>
+               <option value="daWise">DA WISE</option>
               <option value="route">Route</option>
               <option value="category">Category</option>
-              <option value="sl">Sl</option>
+        
               <option value="chemist">Chemist</option>
-              <option value="daWise">DA WISE</option>
+             
               <option value="invoice">INVOICE</option>
               <option value="dateWise">DATE WISE</option>
+              <option value="sl">Sl</option>
             </select>
             <select id="payment-mode-filter" title="Payment Mode দিয়ে ফিল্টার করুন">
               <option value="all">All Payment Mode</option>
@@ -1935,6 +1972,7 @@
                 margin-left: 10px;
                 display: flex;
                 align-items: center;
+                gap: 8px;
                 color: #1a7f37;
               "
             >
@@ -1946,6 +1984,14 @@
               >
                 Report
               </button>
+              <a
+                class="data-upload-link"
+                href="https://shofiul4686.github.io/Rute-wise-collection-/data%20upload.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                DATA UPLOAD
+              </a>
             </div>
           </div>
 
@@ -2065,7 +2111,7 @@
             class="compare-modal-close"
             id="compare-modal-close"
           >
-            &times;
+            Back
           </button>
         </div>
         <div class="compare-modal-body">
@@ -2094,8 +2140,9 @@
               <label for="compare-filter-type">Filter By</label>
               <select id="compare-filter-type" class="ds-date-alt">
                 <option value="all">All</option>
-                <option value="chemist">Chemist</option>
                 <option value="daWise">DA WISE</option>
+                <option value="chemist">Chemist</option>
+                
                 <option value="route">Route</option>
                 <option value="category">Category</option>
                 <option value="status">Status</option>
@@ -2599,6 +2646,30 @@
         // ---- DA_UNPAID/{division}/{year}/{month}/{formattedDate} থেকে একটা ডিভিশনের, একটা নির্দিষ্ট দিনের DA wise ডাটা টেনে আনা ----
         // এখানে প্রতিটা ইনভয়েস (প্রতিটা ডকুমেন্ট) আলাদা row হিসেবে রাখা হয় — সাম করা হয় না।
         // কোড অনুযায়ী সাম দরকার হলে aggregateDaRowsByCode() ফাংশন ব্যবহার করে আলাদাভাবে করা হয়।
+        function getTerritoryFields(data) {
+          const normalizedFields = new Map(
+            Object.entries(data || {}).map(([key, value]) => [
+              key.toLowerCase().replace(/[^a-z0-9]/g, ""),
+              value,
+            ]),
+          );
+          const getValue = (aliases) => {
+            for (const alias of aliases) {
+              const value = normalizedFields.get(
+                alias.toLowerCase().replace(/[^a-z0-9]/g, ""),
+              );
+              if (value !== undefined && value !== null && String(value).trim()) {
+                return String(value).trim();
+              }
+            }
+            return "";
+          };
+          return {
+            code: getValue(["TR CODE", "Territory Code"]),
+            name: getValue(["TR NAME", "Territory Name", "Territory"]),
+          };
+        }
+
         async function fetchDaUnpaidDataSingleDay(division, dateValue) {
           const { year, monthCode, formattedDate } =
             buildDccPathInfo(dateValue);
@@ -2616,6 +2687,7 @@
           const rows = [];
           snapshot.forEach((doc) => {
             const d = doc.data();
+            const territoryFields = getTerritoryFields(d);
             const code = d["Client ID"] || "";
             const name = d["Client Name"] || "";
             const invoiceNo = String(d["Invoice No"] || "").trim();
@@ -2645,7 +2717,9 @@
               // rawCategory: Firestore-এ যা আসলে "CATEGORY" ফিল্ডে সেভ করা আছে (যেমন "DCC") —
               // এটা dashboard কার্ডের জন্য ব্যবহৃত division-based category থেকে আলাদা রাখা হচ্ছে
               rawCategory: (d["CATEGORY"] || "").trim(),
-              territory: "",
+              territoryCode: territoryFields.code,
+              territoryName: territoryFields.name,
+              territory: territoryFields.name,
               source: "DA",
               invoiceNo: invoiceNo,
               paymentMode: (d["Payment Mode"] || "").trim(),
@@ -2716,6 +2790,8 @@
                 routeName: row.routeName,
                 category: row.category,
                 rawCategory: row.rawCategory || "",
+                territoryCode: row.territoryCode || "",
+                territoryName: row.territoryName || row.territory || "",
                 territory: row.territory,
                 source: row.source,
                 invoiceNo: "",
@@ -2727,6 +2803,18 @@
             const bucket = map[key];
             bucket.duesAmount += parseAmountSafe(row.duesAmount);
             bucket.invoiceCount += 1;
+            if (!bucket.territory && row.territory) {
+              bucket.territory = row.territory;
+            }
+            if (!bucket.territoryCode && row.territoryCode) {
+              bucket.territoryCode = row.territoryCode;
+            }
+            if (!bucket.territoryName && row.territoryName) {
+              bucket.territoryName = row.territoryName;
+            }
+            if (!bucket.territoryName && (row.territoryName || row.territory)) {
+              bucket.territoryName = row.territoryName || row.territory;
+            }
             if (row.daInfo && !bucket.daInfos.includes(row.daInfo)) {
               bucket.daInfos.push(row.daInfo);
               bucket.daInfo = bucket.daInfos.join(", ");
@@ -2775,6 +2863,81 @@
           });
 
           return { rows: combinedRows, paths };
+        }
+
+        async function populateMissingTerritories(rows) {
+          const getTerritoryDivision = (row) => {
+            const category = String(row.category || "")
+              .trim()
+              .toLowerCase();
+            return ALL_DIVISIONS.includes(category)
+              ? category
+              : String(row.division || "").trim().toLowerCase();
+          };
+          const chemists = Array.from(
+            new Map(
+              rows
+                .filter((row) => row.code && (!row.territory || !row.territoryCode))
+                .map((row) => [
+                  `${getTerritoryDivision(row)}__${String(row.code).trim()}`,
+                  {
+                    division: getTerritoryDivision(row),
+                    code: String(row.code).trim(),
+                  },
+                ]),
+            ).values(),
+          );
+          const territoryByChemist = new Map();
+          const batchSize = 20;
+
+          for (let i = 0; i < chemists.length; i += batchSize) {
+            await Promise.all(
+              chemists
+                .slice(i, i + batchSize)
+                .map(async ({ division, code }) => {
+                  const clients = firestoreDb.collection(
+                    `Chemist_List/${division}/clients`,
+                  );
+                  const document = await clients
+                    .doc(sanitizeDocId(code))
+                    .get();
+                  let data;
+                  if (document.exists) {
+                    data = document.data();
+                  } else {
+                    const snapshot = await clients
+                      .where("Code", "==", code)
+                      .limit(1)
+                      .get();
+                    if (snapshot.empty) return;
+                    data = snapshot.docs[0].data();
+                  }
+                  const territory = getTerritoryFields(data);
+                  if (territory.code || territory.name) {
+                    territoryByChemist.set(
+                      `${division}__${code}`,
+                      territory,
+                    );
+                  }
+                }),
+            );
+          }
+
+          rows.forEach((row) => {
+            if (!row.territory || !row.territoryCode) {
+              const division = getTerritoryDivision(row);
+              const territory = territoryByChemist.get(
+                `${division}__${String(row.code).trim()}`,
+              );
+              if (!row.territory && territory) {
+                row.territory = territory.name;
+                row.territoryName = territory.name;
+              }
+              if (!row.territoryCode && territory) {
+                row.territoryCode = territory.code;
+              }
+            }
+          });
         }
 
         // ---- DR লিস্ট (IPI NO + NAME একসাথে) ----
@@ -3156,7 +3319,12 @@
                 <td class="collection-amount-col total-collection"></td>
                 <td class="remarks-col"><input type="text" placeholder=""></td>
                 <td data-column="route" class="text-left">${row.routeName}</td>
-                <td data-column="category" class="text-left">${row.category}<br>${row.territory || ""}</td>
+                <td data-column="category" class="text-left">${row.category}<br>${[
+                  row.territoryCode,
+                  row.territoryName || row.territory,
+                ]
+                  .filter(Boolean)
+                  .join(" - ")}</td>
             `;
             tableBody.appendChild(tr);
           });
@@ -3283,6 +3451,8 @@
           dataSourceStatus.textContent = "লোড হচ্ছে...";
           try {
             const { rows, paths } = await fetchAllDivisionsData(dateValue);
+            dataSourceStatus.textContent = "Chemist List থেকে Territory মিলানো হচ্ছে...";
+            await populateMissingTerritories(rows);
             dataSourceStatus.textContent = `সোর্স: PHARMA + INM + ISV (${rows.length} টি রেকর্ড)`;
             displayData(rows);
 
@@ -3978,9 +4148,17 @@
               daName: row.daName || "",
               code: row.code || "",
               chemistName: row.chemistName || "",
+              territoryCode: row.territoryCode || "",
+              territoryName: row.territoryName || row.territory || "",
               category: row.category || "",
               totalOs: 0,
             };
+            if (!item.territoryCode && row.territoryCode) {
+              item.territoryCode = row.territoryCode;
+            }
+            if (!item.territoryName && (row.territoryName || row.territory)) {
+              item.territoryName = row.territoryName || row.territory;
+            }
             item.totalOs += parseAmountSafe(row.duesAmount);
             grouped.set(key, item);
           });
@@ -3993,6 +4171,7 @@
               a.chemistName.localeCompare(b.chemistName) ||
               a.code.localeCompare(b.code),
           );
+          const reportDateRange = formatCompareDateForLabel(dsDateInput.value);
           if (!rows.length) {
             alert("প্রিন্ট করার জন্য কোনো DA WISE ডাটা নেই।");
             return;
@@ -4014,7 +4193,7 @@
           const appendDaTotal = () => {
             if (currentDaKey === null) return;
             bodyRows.push(
-              `<tr class="da-total"><td colspan="2">TOTAL</td><td>${currentDaChemists.size}</td><td>${currentDaTotal.toFixed(2)}</td><td></td></tr>`,
+              `<tr class="da-total"><td colspan="2">TOTAL</td><td>${currentDaChemists.size}</td><td></td><td>${currentDaTotal.toFixed(2)}</td><td></td></tr>`,
             );
           };
           rows.forEach((row) => {
@@ -4035,6 +4214,8 @@
             bodyRows.push(
               `<tr><td>${serial}</td><td>${escapeHtml(row.daInfo)}</td><td>${escapeHtml(
                 [row.chemistName, row.code].filter(Boolean).join(" - "),
+              )}</td><td>${escapeHtml(
+                [row.territoryCode, row.territoryName].filter(Boolean).join(" - "),
               )}</td><td>${row.totalOs.toFixed(2)}</td><td>${escapeHtml(row.category)}</td></tr>`,
             );
           });
@@ -4052,6 +4233,7 @@
               @page { size: portrait; margin: 12mm; }
               body { font: 12px Arial, sans-serif; }
               h2 { text-align: center; }
+              .report-date { text-align: center; margin: -8px 0 16px; }
               table { border-collapse: collapse; width: 100%; }
               th, td { border: 1px solid #555; padding: 6px; }
               th { background: #eee; }
@@ -4060,11 +4242,12 @@
               td:first-child, td:last-child { text-align: right; }
               tfoot { font-weight: bold; }
             </style></head><body>
-            <h2>DA WISE</h2>
+            <h2>DA WISE UNPAID</h2>
+            <p class="report-date">${escapeHtml(reportDateRange)}</p>
             <table><thead><tr>
-              <th>SL</th><th>DA ID &amp; NAME</th><th>CHEMIST NAME &amp; CODE</th><th>TOTAL OS</th><th>CATEGORY</th>
+              <th>SL</th><th>DA ID &amp; NAME</th><th>CHEMIST NAME &amp; CODE</th><th>TR CODE &amp; NAME</th><th>TOTAL OS</th><th>CATEGORY</th>
             </tr></thead><tbody>${bodyRows.join("")}</tbody>
-            <tfoot><tr><td colspan="2" style="text-align:right">GRAND TOTAL</td><td>${allDaChemists.size}</td><td>${grandTotal.toFixed(2)}</td><td></td></tr></tfoot>
+            <tfoot><tr><td colspan="2" style="text-align:right">GRAND TOTAL</td><td>${allDaChemists.size}</td><td></td><td>${grandTotal.toFixed(2)}</td><td></td></tr></tfoot>
             </table></body></html>`);
           printWindow.document.close();
           printWindow.focus();
@@ -4964,6 +5147,10 @@
           compareFilterValueInput.value = "";
           toggleCompareFilterValueClearBtn();
           compareFilterValueSuggestionsBox.style.display = "none";
+          compareFilterValueWrapper.classList.toggle(
+            "da-wise-filter",
+            type === "daWise",
+          );
           compareFilterCategoryInput.value = "";
           toggleCompareFilterCategoryClearBtn();
           compareFilterCategorySuggestionsBox.style.display = "none";
@@ -5455,6 +5642,7 @@
           let headers;
           let rows;
           let groupedRows = null;
+          let hideDaColumns = compareFilterValueInput.value.trim() === "";
           let totalPreviousDue = 0;
           let totalTodayDue = 0;
           let totalCollected = 0;
@@ -5463,6 +5651,7 @@
             const selectedDa = compareFilterValueInput.value
               .toLowerCase()
               .trim();
+            hideDaColumns = selectedDa === "";
             const invoiceRows = lastCompareDaInvoiceRows
               .filter((row) => {
                 const daInfo = `${row.daId} - ${row.daName}`.toLowerCase();
@@ -5499,8 +5688,7 @@
                 groupedRows.push({
                   values: [
                     serial,
-                    row.daId,
-                    row.daName,
+                    ...(!hideDaColumns ? [row.daId, row.daName] : []),
                     row.invoiceNo,
                     row.code,
                     row.chemistName,
@@ -5517,10 +5705,10 @@
               groupedRows.push({
                 values: [
                   "",
-                  "",
+                  ...(!hideDaColumns ? [""] : []),
                   "TOTAL",
                   groupRows.length,
-                  "TOTAL",
+                  chemistCodes.size,
                   "",
                   "",
                   "",
@@ -5535,10 +5723,10 @@
             groupedRows.push({
               values: [
                 "",
-                "",
+                ...(!hideDaColumns ? [""] : []),
                 "GRAND TOTAL",
                 invoiceRows.length,
-                "GRAND TOTAL",
+                allChemistCodes.size,
                 "",
                 "",
                 "",
@@ -5552,8 +5740,7 @@
             });
             headers = [
               "SL No",
-              "DA ID",
-              "DA Name",
+              ...(!hideDaColumns ? ["DA ID", "DA Name"] : []),
               "Invoice No",
               "Code",
               "Chemist Name",
@@ -5573,7 +5760,7 @@
                 index + 1,
                 row.code || "",
                 row.chemistName || "",
-                row.daInfo || "",
+                ...(!hideDaColumns ? [row.daInfo || ""] : []),
                 row.todayDue === 0 ? "Full" : "Part",
                 row.routeName || "",
                 row.territory || "",
@@ -5587,7 +5774,7 @@
               "SL No",
               "Code",
               "Chemist Name",
-              "DA ID & NAME",
+              ...(!hideDaColumns ? ["DA ID & NAME"] : []),
               "Paid Status",
               "Route Name",
               "Territory",
@@ -5630,8 +5817,8 @@
                 .map(
                 ({ values, isTotal, isGrandTotal }) => {
                   const cells = isTotal
-                    ? `<td colspan="3" style="text-align: right !important">${escapeHtml(values[2])}</td><td>${escapeHtml(values[3])}</td><td colspan="2" style="text-align: center">${escapeHtml(values[4])}</td>${values
-                        .slice(6)
+                    ? `<td colspan="${hideDaColumns ? 1 : 3}" style="text-align: right !important">${escapeHtml(values[hideDaColumns ? 1 : 2])}</td><td style="text-align: center">${escapeHtml(values[hideDaColumns ? 2 : 3])}</td><td colspan="2" style="text-align: center">${escapeHtml(values[hideDaColumns ? 3 : 4])}</td>${values
+                        .slice(hideDaColumns ? 5 : 6)
                         .map((cell) => `<td>${escapeHtml(cell)}</td>`)
                         .join("")}`
                     : values
@@ -5659,7 +5846,7 @@
           }
 
           printWindow.document.write(`<!doctype html>
-            <html><head><meta charset="utf-8"><title>Compare Report</title>
+            <html><head><meta charset="utf-8"><title>COLLECTION REPORT</title>
             <style>
               @page { size: landscape; margin: 12mm; }
               body { font: 12px Arial, sans-serif; }
@@ -5674,7 +5861,7 @@
               .da-total-row td:nth-child(5),
               .da-total-row td:nth-child(6) { text-align: center; }
             </style></head><body>
-            <h2>${isDaWise ? "DA Wise Invoice Report" : "Compare Report"}</h2>
+            <h2>${isDaWise ? "DA WISE COLLEECTION REPORT" : "COLLECTION REPORT"}</h2>
             <p>${escapeHtml(compareYesterdayDateLabel.textContent)} — ${escapeHtml(compareTodayDateLabel.textContent)}</p>
             <table><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table>
             </body></html>`);
