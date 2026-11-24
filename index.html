@@ -2026,6 +2026,7 @@
             <div id="dr-suggestions" class="dr-suggestions"></div>
           </div>
         </div>
+        <button class="print schedule-date-print">Print</button>
         <div class="info-item" id="schedule-date-info-item">
           <span>SCHEDULE DATE :</span>
           <input
@@ -3108,6 +3109,9 @@
         const saveBtn = document.querySelector(".page-buttons .save");
         const previewBtn = document.querySelector(".page-buttons .preview");
         const printBtn = document.querySelector(".page-buttons .print");
+        const scheduleDatePrintBtn = document.querySelector(
+          ".schedule-date-print",
+        );
         const actionControlContainers = document.querySelectorAll(
           ".page-buttons, .pagination-controls",
         );
@@ -3116,7 +3120,6 @@
           actionControlContainers.forEach((container) => {
             container.style.display = showControls ? "" : "none";
           });
-          if (printBtn) printBtn.style.display = showControls ? "" : "none";
         }
         updateActionControlsVisibility();
 
@@ -4093,7 +4096,11 @@
           // Print বাটনটি এখন print-info-row এর ভিতরে থাকতে পারে (DR সিলেক্ট থাকলে),
           // প্রিভিউতে যেন এই বাটনটি না দেখায় তাই সাময়িকভাবে লুকানো হচ্ছে
           const printBtnPrevDisplay = printBtn ? printBtn.style.display : "";
+          const scheduleDatePrintBtnPrevDisplay = scheduleDatePrintBtn
+            ? scheduleDatePrintBtn.style.display
+            : "";
           if (printBtn) printBtn.style.display = "none";
+          if (scheduleDatePrintBtn) scheduleDatePrintBtn.style.display = "none";
           const printHead = document.head.innerHTML;
           const printBody =
             document.querySelector(".print-main-header").outerHTML +
@@ -4101,6 +4108,9 @@
             document.querySelector(".table-wrapper").outerHTML +
             document.querySelector(".user-info-footer").outerHTML;
           if (printBtn) printBtn.style.display = printBtnPrevDisplay;
+          if (scheduleDatePrintBtn) {
+            scheduleDatePrintBtn.style.display = scheduleDatePrintBtnPrevDisplay;
+          }
 
           const previewWindow = window.open("", "_blank");
           if (!previewWindow) {
@@ -4122,7 +4132,7 @@
           updateAllTotals();
         });
 
-        printBtn.addEventListener("click", () => {
+        function printCurrentView() {
           if (searchBySelect.value === "daWise") {
             printDaWiseSummary();
             return;
@@ -4149,7 +4159,10 @@
               updateAllTotals();
             }
           });
-        });
+        }
+
+        printBtn.addEventListener("click", printCurrentView);
+        scheduleDatePrintBtn.addEventListener("click", printCurrentView);
 
         function printDaWiseSummary() {
           const grouped = new Map();
@@ -4560,33 +4573,6 @@
           }
         });
 
-        // ---- DR সিলেক্ট করা থাকলে Print বাটনটি SCHEDULE DATE এর ঠিক বামে দেখানোর জন্য ----
-        const pageButtonsContainer = document.querySelector(".page-buttons");
-        const scheduleDateInfoItem = document.getElementById(
-          "schedule-date-info-item",
-        );
-        const printBtnOriginalNextSibling = previewBtn; // মূল অবস্থানে ফিরিয়ে আনার জন্য রেফারেন্স
-
-        function updatePrintBtnPosition() {
-          if (!printBtn || !scheduleDateInfoItem || !printInfoRow) return;
-          const drSelected = drNameInput && drNameInput.value.trim() !== "";
-          if (drSelected) {
-            if (printBtn.parentElement !== printInfoRow) {
-              printInfoRow.insertBefore(printBtn, scheduleDateInfoItem);
-            }
-          } else {
-            if (
-              pageButtonsContainer &&
-              printBtn.parentElement !== pageButtonsContainer
-            ) {
-              pageButtonsContainer.insertBefore(
-                printBtn,
-                printBtnOriginalNextSibling || pageButtonsContainer.firstChild,
-              );
-            }
-          }
-        }
-
         // ---- কাস্টম DR সাজেশন ----
         let drListData = [];
         let drActiveIndex = -1;
@@ -4598,7 +4584,6 @@
             drNameClearBtn.style.display =
               drNameInput.value.trim() !== "" ? "block" : "none";
           }
-          updatePrintBtnPosition();
         }
 
         function renderDrSuggestions(list) {
