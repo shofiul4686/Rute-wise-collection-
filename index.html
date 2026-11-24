@@ -1344,12 +1344,20 @@
         font-size: 15px;
       }
       .compare-modal-close {
-        background: none;
+        background: #6c757d;
         border: none;
         color: #fff;
-        font-size: 18px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        height: 38px;
         cursor: pointer;
         line-height: 1;
+        white-space: nowrap;
+      }
+      .compare-modal-close:hover {
+        opacity: 0.85;
       }
       .compare-modal-body {
         padding: 12px 15px;
@@ -2106,13 +2114,6 @@
       <div class="compare-modal">
         <div class="compare-modal-header">
           <h3>Yesterday Due − Today Due = Collected</h3>
-          <button
-            type="button"
-            class="compare-modal-close"
-            id="compare-modal-close"
-          >
-            Back
-          </button>
         </div>
         <div class="compare-modal-body">
           <div class="compare-toolbar-row">
@@ -2127,6 +2128,13 @@
             </div>
             <button type="button" id="compare-run-btn" class="compare-run-btn">
               Search
+            </button>
+            <button
+              type="button"
+              class="compare-modal-close"
+              id="compare-modal-close"
+            >
+              Back
             </button>
           </div>
 
