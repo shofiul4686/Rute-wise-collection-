@@ -2256,6 +2256,44 @@
               </div>
             </div>
 
+            <div
+              class="compare-controls"
+              id="compare-da-filter-controls"
+              style="display: none; gap: 8px; margin-bottom: 0"
+            >
+              <select id="compare-da-filter" class="ds-date-alt" title="All DA">
+                <option value="all">All DA</option>
+              </select>
+              <select
+                id="compare-payment-mode-filter"
+                class="ds-date-alt"
+                title="All Payment Mode"
+              >
+                <option value="all">All Payment Mode</option>
+              </select>
+              <select
+                id="compare-division-filter"
+                class="ds-date-alt"
+                title="All Division"
+              >
+                <option value="all">All Division</option>
+              </select>
+              <select
+                id="compare-route-filter"
+                class="ds-date-alt"
+                title="All Route"
+              >
+                <option value="all">All Route</option>
+              </select>
+              <select
+                id="compare-category-filter"
+                class="ds-date-alt"
+                title="All Category"
+              >
+                <option value="all">All Category</option>
+              </select>
+            </div>
+
             <!-- Clear Button -->
             <button
               type="button"
@@ -4895,13 +4933,32 @@
         const compareFilterCategorySuggestionsBox = document.getElementById(
           "compare-filter-category-suggestions",
         );
+        const compareDaFilterControls = document.getElementById(
+          "compare-da-filter-controls",
+        );
+        const compareDaFilterSelect = document.getElementById(
+          "compare-da-filter",
+        );
+        const comparePaymentModeFilterSelect = document.getElementById(
+          "compare-payment-mode-filter",
+        );
+        const compareDivisionFilterSelect = document.getElementById(
+          "compare-division-filter",
+        );
+        const compareRouteFilterSelect = document.getElementById(
+          "compare-route-filter",
+        );
+        const compareCategoryFilterSelect = document.getElementById(
+          "compare-category-filter",
+        );
         let compareCategoryOptionsList = [];
         let compareCategoryActiveIndex = -1;
 
         // Compare Dates রান করার পর মূল (unfiltered) রেজাল্ট এখানে রাখা হয়, যাতে ফিল্টার প্রয়োগ করা যায়
         let lastCompareRows = [];
+        let lastCompareSourceRows = [[], []];
         let lastCompareRenderedRows = [];
-        let lastCompareDaInvoiceRows = [];
+        let lastCompareAllDaInvoiceRows = [];
         let compareFilterOptionsList = [];
         let compareFilterActiveIndex = -1;
 
@@ -4937,6 +4994,62 @@
           const cleaned = String(value).replace(/,/g, "").trim();
           const num = parseFloat(cleaned);
           return isNaN(num) ? 0 : num;
+        }
+
+        function buildCompareRows(previousRows, todayRows) {
+          const aggregateRows = (rows) => aggregateDaRowsByCode(rows);
+          const previousByKey = new Map(
+            aggregateRows(previousRows).map((row) => [
+              `${row.division}__${row.source}__${row.code}`,
+              row,
+            ]),
+          );
+          const todayByKey = new Map(
+            aggregateRows(todayRows).map((row) => [
+              `${row.division}__${row.source}__${row.code}`,
+              row,
+            ]),
+          );
+          const allKeys = new Set([
+            ...previousByKey.keys(),
+            ...todayByKey.keys(),
+          ]);
+
+          return Array.from(allKeys)
+            .map((key) => {
+              const previous = previousByKey.get(key);
+              const today = todayByKey.get(key);
+              const base = today || previous;
+              const daInfos = Array.from(
+                new Set([
+                  ...((previous && previous.daInfos) || []),
+                  ...((today && today.daInfos) || []),
+                ]),
+              );
+              const yesterdayDue = previous
+                ? parseAmountSafe(previous.duesAmount)
+                : 0;
+              const todayDue = today ? parseAmountSafe(today.duesAmount) : 0;
+
+              return {
+                division: base.division,
+                code: base.code,
+                chemistName: base.chemistName,
+                daInfo: daInfos.join(", "),
+                daInfos,
+                routeName: base.routeName,
+                territory: base.territory,
+                category: base.category,
+                source: base.source || "DCC",
+                yesterdayDue,
+                todayDue,
+                collected: yesterdayDue - todayDue,
+                inYesterdayOnly: !!previous && !today,
+                inTodayOnly: !!today && !previous,
+              };
+            })
+            .filter((row) => row.collected > 0)
+            .sort((a, b) => b.collected - a.collected);
         }
 
         function openCompareModal() {
@@ -4991,6 +5104,7 @@
               fetchAllDivisionsData(date1),
               fetchAllDivisionsData(date2),
             ]);
+            lastCompareSourceRows = [res1.rows, res2.rows];
             const invoiceRowsByKey = new Map();
             [res1.rows, res2.rows].forEach((sourceRows, dateIndex) => {
               sourceRows.forEach((row) => {
@@ -5009,8 +5123,10 @@
                     todayDue: 0,
                     previousDaId: "",
                     previousDaName: "",
+                    previousPaymentMode: "",
                     todayDaId: "",
                     todayDaName: "",
+                    todayPaymentMode: "",
                   };
                   invoiceRowsByKey.set(key, invoiceRow);
                 }
@@ -5018,17 +5134,19 @@
                   invoiceRow.previousDue += parseAmountSafe(row.duesAmount);
                   invoiceRow.previousDaId = row.daId || "";
                   invoiceRow.previousDaName = row.daName || "";
+                  invoiceRow.previousPaymentMode = row.paymentMode || "";
                 } else {
                   invoiceRow.todayDue += parseAmountSafe(row.duesAmount);
                   invoiceRow.todayDaId = row.daId || "";
                   invoiceRow.todayDaName = row.daName || "";
+                  invoiceRow.todayPaymentMode = row.paymentMode || "";
                 }
                 if (!invoiceRow.routeName && row.routeName) {
                   invoiceRow.routeName = row.routeName;
                 }
               });
             });
-            lastCompareDaInvoiceRows = Array.from(invoiceRowsByKey.values())
+            lastCompareAllDaInvoiceRows = Array.from(invoiceRowsByKey.values())
               .map((row) => {
                 const daId = row.todayDaId || row.previousDaId;
                 const daName = row.todayDaName || row.previousDaName;
@@ -5039,7 +5157,6 @@
                   collected: row.previousDue - row.todayDue,
                 };
               })
-              .filter((row) => row.collected > 0)
               .sort(
                 (a, b) =>
                   a.daId.localeCompare(b.daId) ||
@@ -5048,75 +5165,10 @@
                   a.chemistName.localeCompare(b.chemistName) ||
                   a.invoiceNo.localeCompare(b.invoiceNo),
               );
-
-            // এখন fetchAllDivisionsData প্রতিটা ইনভয়েস আলাদা row হিসেবে দেয়,
-            // কিন্তু Compare (Yesterday Due vs Today Due) সবসময় ক্লায়েন্ট (Code) লেভেলে হওয়া দরকার —
-            // তাই কম্পেয়ার করার আগে দুই তারিখের ডাটাই কোড অনুযায়ী সাম করে নেওয়া হচ্ছে
-            const aggRows1 = aggregateDaRowsByCode(res1.rows);
-            const aggRows2 = aggregateDaRowsByCode(res2.rows);
-
-            // Chemist Code দিয়ে ম্যাপ বানানো (division + source আলাদা হলে key-তেও আলাদা রাখা হচ্ছে,
-            // যাতে Chemist wise আর DA wise-এর কোড কাকতালীয়ভাবে মিলে গেলেও গুলিয়ে না যায়)
-            const buildKey = (row) => `${row.division}__${row.source}__${row.code}`;
-
-            const map1 = {};
-            aggRows1.forEach((row) => {
-              map1[buildKey(row)] = row;
-            });
-            const map2 = {};
-            aggRows2.forEach((row) => {
-              map2[buildKey(row)] = row;
-            });
-
-            const allKeys = new Set([
-              ...Object.keys(map1),
-              ...Object.keys(map2),
-            ]);
-
-            const compareRows = [];
-            allKeys.forEach((key) => {
-              const y = map1[key]; // আগের তারিখের রেকর্ড
-              const t = map2[key]; // পরের তারিখের রেকর্ড
-              const base = t || y; // ডিসপ্লে ইনফোর জন্য (নাম, রুট ইত্যাদি) পরের তারিখেরটাই প্রাধান্য পাবে
-              const yesterdayDue = y ? parseAmountSafe(y.duesAmount) : 0;
-              const todayDue = t ? parseAmountSafe(t.duesAmount) : 0;
-              const collected = yesterdayDue - todayDue;
-              const daInfos = Array.from(
-                new Set([
-                  ...((y && y.daInfos) || []),
-                  ...((t && t.daInfos) || []),
-                ]),
-              );
-
-              compareRows.push({
-                code: base.code,
-                chemistName: base.chemistName,
-                daInfo: daInfos.join(", "),
-                daInfos: daInfos,
-                routeName: base.routeName,
-                territory: base.territory,
-                category: base.category,
-                source: base.source || "DCC",
-                yesterdayDue,
-                todayDue,
-                collected,
-                inYesterdayOnly: !!y && !t,
-                inTodayOnly: !!t && !y,
-              });
-            });
-
-            // কালেকশন (পার্থক্য) বেশি থেকে কম অনুযায়ী সাজানো, যাদের কোনো পরিবর্তন নেই তারা নিচে
-            compareRows.sort((a, b) => b.collected - a.collected);
-
-            // শুধু তাদেরই দেখানো হবে যারা আসলে কালেকশন দিয়েছে (Yesterday Due থেকে Today Due কমেছে)
-            // পরিবর্তন নেই (0) বা নতুন বাকি বেড়েছে (নেগেটিভ) এমন চেমিস্ট বাদ যাবে
-            const collectedOnlyRows = compareRows.filter(
-              (row) => row.collected > 0,
-            );
-
-            lastCompareRows = collectedOnlyRows;
+            lastCompareRows = buildCompareRows(res1.rows, res2.rows);
+            populateCompareDaWiseFilters(true);
             compareFilterRow.style.display =
-              collectedOnlyRows.length > 0 ? "flex" : "none";
+              lastCompareRows.length > 0 ? "flex" : "none";
             // আগে থেকে কোনো Filter By (Chemist/Route/Category) সিলেক্ট করা থাকলে নতুন ডাটা অনুযায়ী অপশন লিস্ট রিফ্রেশ করা
             if (compareFilterTypeSelect.value !== "all") {
               populateCompareFilterOptions(compareFilterTypeSelect.value);
@@ -5180,6 +5232,46 @@
         }
 
         // ---- Select Status dropdown এর অপশন লিস্ট — সবসময় Full/Part ফিক্সড লিস্ট ----
+        function populateCompareDaWiseFilters(preserveSelections = true) {
+          const sourceRows = lastCompareSourceRows[0].concat(
+            lastCompareSourceRows[1],
+          );
+          const filters = [
+            [compareDaFilterSelect, "All DA", "daInfo"],
+            [comparePaymentModeFilterSelect, "All Payment Mode", "paymentMode"],
+            [compareDivisionFilterSelect, "All Division", "division"],
+            [compareRouteFilterSelect, "All Route", "routeName"],
+            [compareCategoryFilterSelect, "All Category", "category"],
+          ];
+
+          filters.forEach(([select, allLabel, field]) => {
+            const previousValue = preserveSelections ? select.value : "all";
+            const values = Array.from(
+              new Set(
+                sourceRows
+                  .map((row) => String(row[field] || "").trim())
+                  .filter(Boolean),
+              ),
+            ).sort();
+            select.innerHTML = "";
+
+            const allOption = document.createElement("option");
+            allOption.value = "all";
+            allOption.textContent = allLabel;
+            select.appendChild(allOption);
+            values.forEach((value) => {
+              const option = document.createElement("option");
+              option.value = value;
+              option.textContent = value;
+              select.appendChild(option);
+            });
+
+            select.value = values.includes(previousValue)
+              ? previousValue
+              : "all";
+          });
+        }
+
         function populateCompareStatusOptions() {
           compareFilterOptionsList = ["Full", "Part"];
         }
@@ -5256,10 +5348,20 @@
           compareFilterCategoryInput.value = "";
           toggleCompareFilterCategoryClearBtn();
           compareFilterCategorySuggestionsBox.style.display = "none";
+          [
+            compareDaFilterSelect,
+            comparePaymentModeFilterSelect,
+            compareDivisionFilterSelect,
+            compareRouteFilterSelect,
+            compareCategoryFilterSelect,
+          ].forEach((select) => {
+            select.value = "all";
+          });
 
           if (type === "all") {
             compareFilterValueWrapper.style.display = "none";
             compareFilterCategoryWrapper.style.display = "none";
+            compareDaFilterControls.style.display = "none";
           } else if (type === "chemist") {
             // শুধু Chemist সিলেক্ট করলে একটাই dropdown (Select Chemist) দেখাবে
             compareFilterValueLabel.textContent = "Select Chemist";
@@ -5275,11 +5377,10 @@
             compareFilterCategoryWrapper.style.display = "none";
             populateCompareStatusOptions();
           } else if (type === "daWise") {
-            compareFilterValueLabel.textContent = "Select DA";
-            compareFilterValueInput.placeholder = "Select DA...";
-            compareFilterValueWrapper.style.display = "flex";
+            compareFilterValueWrapper.style.display = "none";
             compareFilterCategoryWrapper.style.display = "none";
-            populateCompareFilterOptions(type);
+            compareDaFilterControls.style.display = "flex";
+            populateCompareDaWiseFilters(false);
           } else {
             // Route বা Category — যেটাই সিলেক্ট করা হোক, দুইটা dropdown-ই একসাথে দেখাবে:
             // Select Route (routeName অনুযায়ী) এবং Select Category (PHARMA/INM/ISV অনুযায়ী)
@@ -5287,6 +5388,7 @@
             compareFilterValueInput.placeholder = "Select Route...";
             compareFilterValueWrapper.style.display = "flex";
             compareFilterCategoryWrapper.style.display = "flex";
+            compareDaFilterControls.style.display = "none";
             populateCompareFilterOptions(type);
             populateCompareCategoryOptions();
           }
@@ -5501,8 +5603,29 @@
 
         function applyCompareFilters() {
           const type = compareFilterTypeSelect.value;
+          let rowsToFilter = lastCompareRows;
+          if (type === "daWise") {
+            const selectedValues = [
+              [compareDaFilterSelect, "daInfo"],
+              [comparePaymentModeFilterSelect, "paymentMode"],
+              [compareDivisionFilterSelect, "division"],
+              [compareRouteFilterSelect, "routeName"],
+              [compareCategoryFilterSelect, "category"],
+            ];
+            const filterRows = (rows) =>
+              rows.filter((row) =>
+                selectedValues.every(([select, field]) => {
+                  if (select.value === "all") return true;
+                  return String(row[field] || "").trim() === select.value;
+                }),
+              );
+            rowsToFilter = buildCompareRows(
+              filterRows(lastCompareSourceRows[0]),
+              filterRows(lastCompareSourceRows[1]),
+            );
+          }
 
-          const filtered = lastCompareRows.filter((row) => {
+          const filtered = rowsToFilter.filter((row) => {
             if (type === "all") return true;
 
             if (type === "chemist") {
@@ -5557,9 +5680,29 @@
             toggleCompareFilterCategoryClearBtn();
             compareFilterCategoryWrapper.style.display = "none";
             compareFilterCategorySuggestionsBox.style.display = "none";
+            compareDaFilterControls.style.display = "none";
+            [
+              compareDaFilterSelect,
+              comparePaymentModeFilterSelect,
+              compareDivisionFilterSelect,
+              compareRouteFilterSelect,
+              compareCategoryFilterSelect,
+            ].forEach((select) => {
+              select.value = "all";
+            });
             applyCompareFilters();
           });
         }
+
+        [
+          compareDaFilterSelect,
+          comparePaymentModeFilterSelect,
+          compareDivisionFilterSelect,
+          compareRouteFilterSelect,
+          compareCategoryFilterSelect,
+        ].forEach((select) => {
+          select.addEventListener("change", applyCompareFilters);
+        });
 
         // ---- Compare টেবিলের বর্তমানে ফিল্টার হওয়া ডাটা CSV আকারে ডাউনলোড করার ফাংশন ----
         function escapeCsvValue(value) {
@@ -5570,15 +5713,52 @@
           return str;
         }
 
+        function getFilteredCompareDaInvoiceRows() {
+          const selectedDa = compareDaFilterSelect.value;
+          const selectedPaymentMode = comparePaymentModeFilterSelect.value;
+          return lastCompareAllDaInvoiceRows
+            .filter((row) => {
+              const daInfos = [
+                [row.previousDaId, row.previousDaName],
+                [row.todayDaId, row.todayDaName],
+              ].map((parts) => parts.filter(Boolean).join(" - "));
+              return (
+                (selectedDa === "all" || daInfos.includes(selectedDa)) &&
+                (compareDivisionFilterSelect.value === "all" ||
+                  String(row.division || "").trim() ===
+                    compareDivisionFilterSelect.value) &&
+                (compareRouteFilterSelect.value === "all" ||
+                  String(row.routeName || "").trim() ===
+                    compareRouteFilterSelect.value) &&
+                (compareCategoryFilterSelect.value === "all" ||
+                  String(row.category || "").trim() ===
+                    compareCategoryFilterSelect.value)
+              );
+            })
+            .map((row) => {
+              const previousDue =
+                selectedPaymentMode === "all" ||
+                row.previousPaymentMode === selectedPaymentMode
+                  ? row.previousDue
+                  : 0;
+              const todayDue =
+                selectedPaymentMode === "all" ||
+                row.todayPaymentMode === selectedPaymentMode
+                  ? row.todayDue
+                  : 0;
+              return {
+                ...row,
+                previousDue,
+                todayDue,
+                collected: previousDue - todayDue,
+              };
+            })
+            .filter((row) => row.collected > 0);
+        }
+
         function downloadCompareCsv() {
           if (compareFilterTypeSelect.value === "daWise") {
-            const selectedDa = compareFilterValueInput.value
-              .toLowerCase()
-              .trim();
-            const invoiceRows = lastCompareDaInvoiceRows.filter((row) => {
-              const daInfo = `${row.daId} - ${row.daName}`.toLowerCase();
-              return selectedDa === "" || daInfo.includes(selectedDa);
-            });
+            const invoiceRows = getFilteredCompareDaInvoiceRows();
             if (!invoiceRows.length) {
               alert("ডাউনলোড করার জন্য কোনো invoice-wise DA ডাটা নেই।");
               return;
@@ -5761,21 +5941,14 @@
           let headers;
           let rows;
           let groupedRows = null;
-          let hideDaColumns = compareFilterValueInput.value.trim() === "";
+          let hideDaColumns = compareDaFilterSelect.value === "all";
           let totalPreviousDue = 0;
           let totalTodayDue = 0;
           let totalCollected = 0;
 
           if (isDaWise) {
-            const selectedDa = compareFilterValueInput.value
-              .toLowerCase()
-              .trim();
-            hideDaColumns = selectedDa === "";
-            const invoiceRows = lastCompareDaInvoiceRows
-              .filter((row) => {
-                const daInfo = `${row.daId} - ${row.daName}`.toLowerCase();
-                return selectedDa === "" || daInfo.includes(selectedDa);
-              });
+            hideDaColumns = compareDaFilterSelect.value === "all";
+            const invoiceRows = getFilteredCompareDaInvoiceRows();
             const daGroups = new Map();
             invoiceRows.forEach((row) => {
               const daKey = `${row.daId}__${row.daName}`;
