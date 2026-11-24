@@ -207,6 +207,20 @@
         cursor: pointer;
       }
 
+      #da-wise-filter {
+        padding: 6px 8px;
+        font-size: 13px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1.5px solid #ced4da;
+        background: #fbfcfe;
+        color: #0b4f8c;
+        font-weight: 600;
+        min-width: 130px;
+        box-sizing: border-box;
+        cursor: pointer;
+      }
+
       #division-filter,
       #route-name-filter,
       #raw-category-filter {
@@ -1889,6 +1903,9 @@
               <option value="dateWise">DATE WISE</option>
               <option value="sl">Sl</option>
             </select>
+            <select id="da-wise-filter" title="DA Name দিয়ে ফিল্টার করুন" style="display: none">
+              <option value="all">All DA</option>
+            </select>
             <select id="payment-mode-filter" title="Payment Mode দিয়ে ফিল্টার করুন">
               <option value="all">All Payment Mode</option>
             </select>
@@ -3077,6 +3094,7 @@
         const loadingOverlay = document.getElementById("loading-overlay");
         const searchBySelect = document.getElementById("search-by");
         const textFilterInput = document.getElementById("text-filter");
+        const daWiseFilterSelect = document.getElementById("da-wise-filter");
         const paymentModeFilterSelect = document.getElementById(
           "payment-mode-filter",
         );
@@ -3419,6 +3437,32 @@
             : "all";
         }
 
+        function populateDaWiseFilter() {
+          const previousValue = daWiseFilterSelect.value;
+          const uniqueNames = Array.from(
+            new Set(
+              allData
+                .map((row) => String(row.daName || "").trim())
+                .filter(Boolean),
+            ),
+          ).sort();
+
+          daWiseFilterSelect.innerHTML = "";
+          const allOption = document.createElement("option");
+          allOption.value = "all";
+          allOption.textContent = "All DA";
+          daWiseFilterSelect.appendChild(allOption);
+          uniqueNames.forEach((name) => {
+            const option = document.createElement("option");
+            option.value = name;
+            option.textContent = name;
+            daWiseFilterSelect.appendChild(option);
+          });
+          daWiseFilterSelect.value = uniqueNames.includes(previousValue)
+            ? previousValue
+            : "all";
+        }
+
         // ---- সাধারণ ফাংশন: allData থেকে একটা ফিল্ডের ইউনিক ভ্যালু বের করে একটা ড্রপডাউনে বসায় ----
         function populateGenericFilter(selectEl, fieldName, allLabel, labelFn) {
           const uniqueValues = Array.from(
@@ -3472,6 +3516,7 @@
               '<tr><td colspan="17">No data available.</td></tr>';
             allData = [];
             filteredData = [];
+            populateDaWiseFilter();
             populatePaymentModeFilter();
             populateDivisionFilter();
             populateRouteNameFilter();
@@ -3483,6 +3528,7 @@
           allData = data;
           filteredData = data;
           populateRouteCategoryFilter("route");
+          populateDaWiseFilter();
           populatePaymentModeFilter();
           populateDivisionFilter();
           populateRouteNameFilter();
@@ -3694,6 +3740,9 @@
           const selectedRawCategory = rawCategoryFilterSelect
             ? rawCategoryFilterSelect.value
             : "all";
+          const selectedDaName = daWiseFilterSelect
+            ? daWiseFilterSelect.value
+            : "all";
 
           const baseData = allData.filter((row) => {
             if (
@@ -3721,8 +3770,14 @@
 
           if (filterBy === "daWise") {
             // Search By: DA WISE — সব ডাটা কোড (Client ID) অনুযায়ী সাম করে দেখানো হয়
-            filteredDaWisePrintData = baseData;
-            filteredData = aggregateDaRowsByCode(baseData);
+            const daWiseData =
+              selectedDaName === "all"
+                ? baseData
+                : baseData.filter(
+                    (row) => String(row.daName || "").trim() === selectedDaName,
+                  );
+            filteredDaWisePrintData = daWiseData;
+            filteredData = aggregateDaRowsByCode(daWiseData);
           } else if (filterBy === "invoice") {
             filteredDaWisePrintData = [];
             // Search By: INVOICE — প্রতিটা ইনভয়েস আলাদা row হিসেবে (সাম না করে), Invoice No দিয়ে সার্চ
@@ -3987,6 +4042,10 @@
         searchBySelect.addEventListener("change", (event) => {
           const selectedValue = event.target.value;
           updateActionControlsVisibility();
+          if (daWiseFilterSelect) {
+            daWiseFilterSelect.style.display =
+              selectedValue === "daWise" ? "" : "none";
+          }
           textFilterInput.style.display = "none";
           routeCategoryFilterWrapper.style.display = "none";
           routeCategorySuggestionsBox.style.display = "none";
@@ -4040,6 +4099,7 @@
         }
 
         textFilterInput.addEventListener("input", filterTable);
+        daWiseFilterSelect.addEventListener("change", filterTable);
         paymentModeFilterSelect.addEventListener("change", filterTable);
         divisionFilterSelect.addEventListener("change", filterTable);
         routeNameFilterSelect.addEventListener("change", filterTable);
