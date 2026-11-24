@@ -4941,6 +4941,7 @@
 
         function openCompareModal() {
           initComparePickers();
+          syncCompareFilterType();
           compareModalOverlay.classList.add("open");
         }
 
@@ -5290,6 +5291,23 @@
             populateCompareCategoryOptions();
           }
           applyCompareFilters();
+        });
+
+        function syncCompareFilterType() {
+          const supportedModes = ["all", "daWise", "chemist", "route", "category"];
+          const mainMode = searchBySelect.value;
+          compareFilterTypeSelect.value = supportedModes.includes(mainMode)
+            ? mainMode
+            : "all";
+          compareFilterTypeSelect.dispatchEvent(
+            new Event("change", { bubbles: true }),
+          );
+        }
+
+        searchBySelect.addEventListener("change", () => {
+          if (compareModalOverlay.classList.contains("open")) {
+            syncCompareFilterType();
+          }
         });
 
         compareFilterValueInput.addEventListener("input", function () {
