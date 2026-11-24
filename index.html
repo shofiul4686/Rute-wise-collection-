@@ -1920,6 +1920,9 @@
                 class="autocomplete-suggestions"
               ></div>
             </div>
+            <button type="button" class="print" id="search-print-button">
+              Print
+            </button>
             <div
               class="date-wise-wrapper"
               id="date-wise-wrapper"
@@ -1986,7 +1989,6 @@
           </div>
 
           <div class="toolbar-item page-buttons">
-            <button class="print">Print</button>
             <button class="preview">Preview</button>
             <button class="save">Save</button>
           </div>
@@ -3128,7 +3130,7 @@
         );
         const saveBtn = document.querySelector(".page-buttons .save");
         const previewBtn = document.querySelector(".page-buttons .preview");
-        const printBtn = document.querySelector(".page-buttons .print");
+        const printBtn = document.getElementById("search-print-button");
         const scheduleDatePrintBtn = document.querySelector(
           ".schedule-date-print",
         );
