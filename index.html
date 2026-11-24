@@ -3108,6 +3108,18 @@
         const saveBtn = document.querySelector(".page-buttons .save");
         const previewBtn = document.querySelector(".page-buttons .preview");
         const printBtn = document.querySelector(".page-buttons .print");
+        const actionControlContainers = document.querySelectorAll(
+          ".page-buttons, .pagination-controls",
+        );
+        function updateActionControlsVisibility() {
+          const showControls = searchBySelect.value === "all";
+          actionControlContainers.forEach((container) => {
+            container.style.display = showControls ? "" : "none";
+          });
+          if (printBtn) printBtn.style.display = showControls ? "" : "none";
+        }
+        updateActionControlsVisibility();
+
         const drNameInput = document.getElementById("dr-name-input");
         const drNameClearBtn = document.getElementById("dr-name-clear");
         const scheduleDateInput = document.getElementById(
@@ -3942,6 +3954,7 @@
         const dateWiseWrapper = document.getElementById("date-wise-wrapper");
         searchBySelect.addEventListener("change", (event) => {
           const selectedValue = event.target.value;
+          updateActionControlsVisibility();
           textFilterInput.style.display = "none";
           routeCategoryFilterWrapper.style.display = "none";
           routeCategorySuggestionsBox.style.display = "none";
