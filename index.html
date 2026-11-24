@@ -176,6 +176,23 @@
         min-width: 130px;
       }
 
+      #all-mode-button {
+        height: 34px;
+        padding: 6px 10px;
+        border: 1.5px solid #ced4da;
+        border-radius: 6px;
+        background-color: #0b4f8c;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      #all-mode-button:hover {
+        background-color: #083c6b;
+      }
+
       #payment-mode-filter {
         padding: 6px 8px;
         font-size: 13px;
@@ -1963,6 +1980,9 @@
             <select id="raw-category-filter" title="Category দিয়ে ফিল্টার করুন">
               <option value="all">All Category</option>
             </select>
+            <button type="button" id="all-mode-button" style="display: none">
+              All Mode
+            </button>
           </div>
 
           <div class="toolbar-item page-buttons">
@@ -3112,6 +3132,7 @@
         const scheduleDatePrintBtn = document.querySelector(
           ".schedule-date-print",
         );
+        const allModeButton = document.getElementById("all-mode-button");
         const actionControlContainers = document.querySelectorAll(
           ".page-buttons, .pagination-controls",
         );
@@ -3120,6 +3141,9 @@
           actionControlContainers.forEach((container) => {
             container.style.display = showControls ? "" : "none";
           });
+          if (allModeButton) {
+            allModeButton.style.display = showControls ? "none" : "inline-flex";
+          }
         }
         updateActionControlsVisibility();
 
@@ -4003,6 +4027,12 @@
           }
           filterTable();
         });
+        if (allModeButton) {
+          allModeButton.addEventListener("click", () => {
+            searchBySelect.value = "all";
+            searchBySelect.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+        }
 
         textFilterInput.addEventListener("input", filterTable);
         paymentModeFilterSelect.addEventListener("change", filterTable);
