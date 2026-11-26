@@ -199,6 +199,27 @@
         margin-top: 22px;
         display: none;
       }
+      .upload-audit-panel {
+        margin-bottom: 20px;
+        padding: 12px 14px;
+        border: 1px solid var(--line-soft);
+        border-radius: 9px;
+        background: #f6f7f4;
+        font-size: 13px;
+      }
+      .upload-audit-panel strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .upload-audit-status {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+      }
+      .upload-audit-status.error {
+        color: var(--error);
+        font-weight: 600;
+      }
       .bar-track {
         background: var(--line-soft);
         border-radius: 20px;
@@ -740,6 +761,11 @@
   <body>
     <div class="wrap">
       <div class="card">
+        <div class="upload-audit-panel" aria-live="polite">
+          <strong>Latest successful upload</strong>
+          <span id="lastUploadRecord">Loading shared upload record...</span>
+          <span id="uploadAuditStatus" class="upload-audit-status"></span>
+        </div>
         <div class="row3">
           <div>
             <label> File Choose </label>
@@ -954,6 +980,9 @@
       const previewInfoLineEl = document.getElementById("previewInfoLine");
       const confirmUploadBtn = document.getElementById("confirmUploadBtn");
       const cancelPreviewBtn = document.getElementById("cancelPreviewBtn");
+      const lastUploadRecordEl = document.getElementById("lastUploadRecord");
+      const uploadAuditStatusEl = document.getElementById("uploadAuditStatus");
+      const UPLOAD_AUDIT_PATH = "upload_audit/latest_successful";
 
       const today = new Date();
       unpaidDateInput.value = "";
@@ -1174,6 +1203,85 @@
       let chemistListDb = null;
       let pendingState = null; // Confirm ধাপের জন্য সব তথ্য এখানে রাখা হয়
       let routeOptionsList = []; // Route_Update থেকে আনা রুটের তালিকা (ড্রপডাউনের জন্য)
+
+      function getUploadAuditRef() {
+        if (!app) {
+          app =
+            !firebase.apps || !firebase.apps.length
+              ? firebase.initializeApp(firebaseConfig)
+              : firebase.app();
+        }
+        return firebase
+          .database(app)
+          .ref(UPLOAD_AUDIT_PATH);
+      }
+
+      function formatUploadAuditRecord(record) {
+        const uploadedAt = new Date(record.uploadedAt);
+        if (Number.isNaN(uploadedAt.getTime())) {
+          throw new Error("The shared upload record has an invalid timestamp.");
+        }
+        const dateTime = new Intl.DateTimeFormat(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        }).format(uploadedAt);
+        const details = [
+          dateTime,
+          record.destinationLabel || record.destination,
+          `${record.rowCount} rows`,
+          record.unpaidDate ? `Data date: ${record.unpaidDate}` : "",
+        ].filter(Boolean);
+        return details.join(" · ");
+      }
+
+      async function loadLatestUploadRecord() {
+        try {
+          const snapshot = await getUploadAuditRef().once("value");
+          const record = snapshot.val();
+          lastUploadRecordEl.textContent = record
+            ? formatUploadAuditRecord(record)
+            : "No successful uploads recorded yet.";
+        } catch (error) {
+          console.error("Could not read the shared upload record:", error);
+          lastUploadRecordEl.textContent =
+            "Could not load the shared upload record.";
+          uploadAuditStatusEl.textContent =
+            `Read failed: ${error.message || error}. Check Realtime Database access rules and connection.`;
+          uploadAuditStatusEl.classList.add("error");
+        }
+      }
+
+      async function saveLatestUploadRecord(state, rowCount) {
+        const selectedOption =
+          collectionSelect.options[collectionSelect.selectedIndex];
+        const record = {
+          uploadedAt: new Date().toISOString(),
+          targetDb: state.targetDb,
+          destination: state.displayPath || state.rtdbRootPath,
+          destinationLabel: selectedOption
+            ? selectedOption.textContent.trim()
+            : state.targetDb,
+          rowCount,
+          division: state.division || "",
+          employeeCategory: state.employeeCategory || "",
+          unpaidDate: state.unpaidDate || "",
+        };
+
+        try {
+          await getUploadAuditRef().set(record);
+          lastUploadRecordEl.textContent = formatUploadAuditRecord(record);
+          uploadAuditStatusEl.textContent = "";
+          uploadAuditStatusEl.classList.remove("error");
+        } catch (error) {
+          console.error("Could not save the shared upload record:", error);
+          uploadAuditStatusEl.textContent =
+            `Upload succeeded, but saving the shared upload record failed: ${error.message || error}. Check Realtime Database write rules and connection.`;
+          uploadAuditStatusEl.classList.add("error");
+        }
+      }
 
       function collectRouteNames(value, names = []) {
         if (value === null || value === undefined) return names;
@@ -2308,6 +2416,7 @@
             displayPath,
             rtdb,
             rtdbRootPath,
+            unpaidDate: unpaidDateInput.value,
             newRows,
             existingRows,
           };
@@ -2503,7 +2612,11 @@
           successBox.style.display = "block";
           successBox.textContent = `✅ Successfully uploaded data to '${displayPath}'! (Total ${allRows.length} records)`;
         }
+
+        await saveLatestUploadRecord(state, allRows.length);
       }
+
+      loadLatestUploadRecord();
     </script>
   </body>
 </html>
