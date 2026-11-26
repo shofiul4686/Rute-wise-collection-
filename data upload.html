@@ -200,6 +200,7 @@
         display: none;
       }
       .upload-audit-panel {
+        margin-top: 18px;
         margin-bottom: 20px;
         padding: 12px 14px;
         border: 1px solid var(--line-soft);
@@ -761,11 +762,6 @@
   <body>
     <div class="wrap">
       <div class="card">
-        <div class="upload-audit-panel" aria-live="polite">
-          <strong>Latest successful upload</strong>
-          <span id="lastUploadRecord">Loading shared upload record...</span>
-          <span id="uploadAuditStatus" class="upload-audit-status"></span>
-        </div>
         <div class="row3">
           <div>
             <label> File Choose </label>
@@ -907,6 +903,11 @@
           <button id="confirmUploadBtn">Confirm &amp; Upload</button>
           <button id="cancelPreviewBtn">Cancel</button>
         </div>
+      </div>
+      <div class="upload-audit-panel" aria-live="polite">
+        <strong>Latest successful upload</strong>
+        <span id="lastUploadRecord">Loading shared upload record...</span>
+        <span id="uploadAuditStatus" class="upload-audit-status"></span>
       </div>
     </div>
 
