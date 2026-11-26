@@ -1176,6 +1176,35 @@
         return "";
       }
 
+      function normalizeCsvHeader(header) {
+        return String(header || "")
+          .replace(/^\uFEFF/, "")
+          .trim()
+          .toUpperCase();
+      }
+
+      function filterDaWiseRowsByAllocationId(rawRows, headers) {
+        const allocationIdHeader = headers.find(
+          (header) => normalizeCsvHeader(header) === "ALLOCATION ID",
+        );
+        if (!allocationIdHeader) {
+          throw new Error(
+            'The CSV is missing the required "Allocation ID" column for DA Wise Unpaid.',
+          );
+        }
+
+        let skippedRows = 0;
+        const rows = rawRows.filter((row) => {
+          const allocationId = String(row[allocationIdHeader] ?? "").trim();
+          if (!allocationId) {
+            skippedRows++;
+            return false;
+          }
+          return true;
+        });
+        return { header: allocationIdHeader, rows, skippedRows };
+      }
+
       function splitCombinedColumn(combined) {
         combined = (combined || "").toString().trim();
         let id = "";
@@ -1965,8 +1994,17 @@
               }
             }
           } else if (isDaWiseUnpaid) {
-            for (let i = 0; i < rawRows.length; i++) {
-              const r = rawRows[i];
+            const allocationResult = filterDaWiseRowsByAllocationId(
+              rawRows,
+              parsed.meta.fields || Object.keys(rawRows[0] || {}),
+            );
+            const daWiseRows = allocationResult.rows;
+            for (let i = 0; i < daWiseRows.length; i++) {
+              const r = daWiseRows[i];
+              const allocationId = String(
+                r[allocationResult.header] ?? "",
+              ).trim();
+
               let clean = {};
               Object.keys(r).forEach((k) => {
                 if (k) clean[k.trim()] = (r[k] || "").toString().trim();
@@ -2013,11 +2051,6 @@
                 "Category Name",
                 "Category",
                 "CATEGORY",
-              ]);
-              const allocationId = findFirstValue(clean, [
-                "Allocation ID",
-                "Allocation Id",
-                "ALLOCATION ID",
               ]);
               const invoiceNo = findFirstValue(clean, [
                 "Invoice No",
@@ -2076,6 +2109,9 @@
                 });
               }
             }
+            log(
+              `Skipped ${allocationResult.skippedRows} DA Wise Unpaid row(s) with blank Allocation ID.`,
+            );
           } else {
             for (let i = 0; i < rawRows.length; i++) {
               let r = rawRows[i];
